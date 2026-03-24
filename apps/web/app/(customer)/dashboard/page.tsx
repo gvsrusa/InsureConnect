@@ -39,6 +39,9 @@ export default async function CustomerDashboardPage(): Promise<React.JSX.Element
   }
 
   const hasPendingQuotes = dashboard.pendingQuotes > 0;
+  const quotesHref = dashboard.latestQuoteRequestId
+    ? `/quotes?quoteRequestId=${dashboard.latestQuoteRequestId}`
+    : "/quotes";
 
   return (
     <>
@@ -46,7 +49,7 @@ export default async function CustomerDashboardPage(): Promise<React.JSX.Element
         <AlertBanner
           type="warning"
           message={`You have ${dashboard.pendingQuotes} pending quote${dashboard.pendingQuotes > 1 ? "s" : ""} expiring soon.`}
-          ctaHref="/quotes"
+          ctaHref={quotesHref}
           ctaLabel="View quotes →"
         />
       )}

@@ -13,7 +13,7 @@ export class AdminController {
 
   @Get("analytics")
   async analytics() {
-    const [totalRequests, successfulRequests, boundPolicies, callsToday, policyAggregate] = await Promise.all([
+    const [totalRequests, successfulRequests, boundPolicies, callsToday, quotes] = await Promise.all([
       this.prisma.quoteRequest.count(),
       this.prisma.quoteRequest.count({ where: { status: "QUOTED" } }),
       this.prisma.policy.count({ where: { status: "ACTIVE" } }),
@@ -24,15 +24,34 @@ export class AdminController {
           }
         }
       }),
-      this.prisma.quote.aggregate({ _avg: { premiumCents: true } })
+      this.prisma.quote.findMany({
+        select: {
+          createdAt: true,
+          quoteRequest: {
+            select: { createdAt: true }
+          }
+        }
+      })
     ]);
+
+    const avgResponseMs =
+      quotes.length === 0
+        ? 180
+        : Math.max(
+            180,
+            Math.round(
+              quotes.reduce((total, quote) => {
+                return total + (quote.createdAt.getTime() - quote.quoteRequest.createdAt.getTime());
+              }, 0) / quotes.length
+            )
+          );
 
     return {
       totalRequests,
       successRate: totalRequests === 0 ? 0 : Number((successfulRequests / totalRequests).toFixed(2)),
       boundPolicies,
       apiCallsToday: callsToday,
-      avgResponseMs: Math.max(180, Math.round((policyAggregate._avg.premiumCents ?? 0) / 10))
+      avgResponseMs
     };
   }
 

@@ -13,6 +13,8 @@ export class PortalController {
 
   @Get("dashboard")
   async dashboard(@CurrentUser() user: JwtUser) {
+    const quoteRequestWhere = user.role === UserRole.ADMIN ? undefined : { requesterId: user.userId };
+
     const policies = await this.prisma.policy.findMany({
       where: user.role === UserRole.ADMIN ? undefined : { userId: user.userId },
       include: {
@@ -37,8 +39,14 @@ export class PortalController {
     const pendingQuotes = await this.prisma.quoteRequest.count({
       where: {
         status: { in: ["NEW", "IN_REVIEW"] },
-        ...(user.role === UserRole.ADMIN ? {} : { requesterId: user.userId })
+        ...(quoteRequestWhere ?? {})
       }
+    });
+
+    const latestQuoteRequest = await this.prisma.quoteRequest.findFirst({
+      where: quoteRequestWhere,
+      orderBy: { createdAt: "desc" },
+      select: { id: true }
     });
 
     const annualPremiumAggregate = await this.prisma.policy.aggregate({
@@ -53,6 +61,7 @@ export class PortalController {
       activePolicies,
       pendingQuotes,
       annualPremium: Math.round((annualPremiumAggregate._sum.premiumCents ?? 0) / 100),
+      latestQuoteRequestId: latestQuoteRequest?.id,
       recentPolicies: policies.map((policy) => this.toPolicy(policy))
     };
   }

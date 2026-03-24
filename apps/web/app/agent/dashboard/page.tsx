@@ -86,7 +86,7 @@ export default async function AgentDashboardPage(): Promise<React.JSX.Element> {
                   <td className="px-4 py-3 text-muted">{timeAgo(qr.createdAt)}</td>
                   <td className="px-4 py-3">
                     <Link
-                      href={`/agent/quotes?id=${qr.id}`}
+                      href={`/agent/quotes/${qr.id}`}
                       className="text-pine text-xs font-semibold hover:underline"
                     >
                       Review →

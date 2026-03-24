@@ -79,13 +79,23 @@ async function main(): Promise<void> {
     }
   });
 
+  await prisma.quote.deleteMany({
+    where: { quoteRequestId: quoteRequest.id }
+  });
+
   await prisma.quote.create({
     data: {
       quoteRequestId: quoteRequest.id,
       carrierName: "Northshore Mutual",
-      premiumCents: 412500,
+      premiumCents: 34375,
+      annualPremiumCents: 412500,
       termMonths: 12,
-      status: QuoteStatus.READY
+      status: QuoteStatus.READY,
+      coverageSummary: {
+        liability: 1000000,
+        deductible: 2500,
+        propertyDamage: 500000
+      }
     }
   });
 
@@ -104,6 +114,10 @@ async function main(): Promise<void> {
       effectiveDate: new Date("2026-01-01T00:00:00.000Z"),
       expirationDate: new Date("2027-01-01T00:00:00.000Z")
     }
+  });
+
+  await prisma.policyEvent.deleteMany({
+    where: { policyId: policy.id }
   });
 
   await prisma.policyEvent.create({

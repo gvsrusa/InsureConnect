@@ -49,6 +49,7 @@ export interface DashboardSummary {
   activePolicies: number;
   pendingQuotes: number;
   annualPremium: number;
+  latestQuoteRequestId?: string;
   recentPolicies: Policy[];
 }
 

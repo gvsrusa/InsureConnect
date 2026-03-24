@@ -53,6 +53,7 @@ export const MOCK_CUSTOMER_DASHBOARD: DashboardSummary = {
   activePolicies: 2,
   pendingQuotes: 1,
   annualPremium: 2320,
+  latestQuoteRequestId: "qr_mock_001",
   recentPolicies: MOCK_POLICIES.slice(0, 2)
 };
 

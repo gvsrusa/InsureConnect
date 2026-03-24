@@ -1,44 +1,18 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
+import NavTabs from "./NavTabs";
 
 type NavVariant = "customer" | "agent" | "partner";
 
-interface NavItem {
-  label: string;
-  href: string;
-}
-
-const NAV_ITEMS: Record<NavVariant, NavItem[]> = {
-  customer: [
-    { label: "Dashboard", href: "/dashboard" },
-    { label: "Policies", href: "/policies" },
-    { label: "My Agent", href: "/agent" }
-  ],
-  agent: [
-    { label: "Dashboard", href: "/agent/dashboard" },
-    { label: "Quotes", href: "/agent/quotes" },
-    { label: "Policies", href: "/agent/policies" }
-  ],
-  partner: [
-    { label: "Dashboard", href: "/partner/dashboard" },
-    { label: "Quotes", href: "/partner/quotes" },
-    { label: "Policies", href: "/partner/policies" }
-  ]
-};
-
 interface TopNavProps {
   variant: NavVariant;
-  /** current pathname used to highlight active tab */
-  currentPath?: string;
 }
 
 export default async function TopNav({
-  variant,
-  currentPath = ""
+  variant
 }: TopNavProps): Promise<React.JSX.Element> {
   const cookieStore = await cookies();
   const hasToken = !!cookieStore.get("access_token")?.value;
-  const items = NAV_ITEMS[variant];
 
   return (
     <header className="sticky top-0 z-30 border-b border-[var(--color-border)] bg-white/90 backdrop-blur-md">
@@ -68,25 +42,7 @@ export default async function TopNav({
         </Link>
 
         {/* Nav tabs */}
-        <nav className="flex items-center gap-1" aria-label="Primary navigation">
-          {items.map((item) => {
-            const isActive = currentPath.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={[
-                  "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-pine/10 text-pine"
-                    : "text-[var(--color-muted)] hover:bg-gray-100 hover:text-ink"
-                ].join(" ")}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+        <NavTabs variant={variant} />
 
         {/* Right slot */}
         <div className="flex shrink-0 items-center gap-2">
