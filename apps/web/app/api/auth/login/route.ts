@@ -13,10 +13,10 @@ function normalizePortal(value: string | undefined): Portal {
   return "customer";
 }
 
-function primaryRoleForPortal(portal: Portal): string {
-  if (portal === "agent") return "AGENT";
-  if (portal === "partner") return "PARTNER_UNDERWRITER";
-  return "CUSTOMER";
+function candidateRolesForPortal(portal: Portal): string[] {
+  if (portal === "agent") return ["AGENT"];
+  if (portal === "partner") return ["PARTNER_UNDERWRITER", "PARTNER_VIEWER"];
+  return ["CUSTOMER"];
 }
 
 function accessCookieName(portal: Portal): string {
@@ -48,20 +48,32 @@ function uniqueRolesByPortal(roles: string[]): string[] {
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const body = await req.json() as { email?: string; password?: string; portal?: string };
   const portal = normalizePortal(body.portal);
-  const preferredRole = primaryRoleForPortal(portal);
+  const roleCandidates = candidateRolesForPortal(portal);
 
-  const upstream = await fetch(`${API_BASE}/api/v1/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: body.email, password: body.password, role: preferredRole })
-  });
+  let data: { accessToken?: string; user?: { availableRoles?: string[] } } | null = null;
+  let finalErrorStatus = 401;
+  let finalErrorMessage = "Login failed";
 
-  if (!upstream.ok) {
+  for (const role of roleCandidates) {
+    const upstream = await fetch(`${API_BASE}/api/v1/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: body.email, password: body.password, role })
+    });
+
+    if (upstream.ok) {
+      data = await upstream.json() as { accessToken?: string; user?: { availableRoles?: string[] } };
+      break;
+    }
+
     const err = await upstream.json().catch(() => ({ message: "Login failed" })) as { message?: string };
-    return NextResponse.json({ message: err.message ?? "Login failed" }, { status: upstream.status });
+    finalErrorStatus = upstream.status;
+    finalErrorMessage = err.message ?? "Login failed";
   }
 
-  const data = await upstream.json() as { accessToken?: string; user?: { availableRoles?: string[] } };
+  if (!data) {
+    return NextResponse.json({ message: finalErrorMessage }, { status: finalErrorStatus });
+  }
   const cookieStore = await cookies();
 
   if (data.accessToken) {
@@ -78,7 +90,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   // Pre-mint one token per portal to support seamless role-tab switching.
   const fallbackRoles = uniqueRolesByPortal(
-    availableRoles.filter((role) => role !== preferredRole)
+    availableRoles.filter((role) => !roleCandidates.includes(role))
   );
 
   for (const role of fallbackRoles) {

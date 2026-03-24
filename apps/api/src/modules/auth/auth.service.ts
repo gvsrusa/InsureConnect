@@ -43,7 +43,8 @@ export class AuthService {
     const user = await this.usersService.create({
       email: dto.email,
       fullName: dto.fullName,
-      password: dto.password
+      password: dto.password,
+      roles: dto.roles
     });
 
     return this.buildAuthResponse(user);

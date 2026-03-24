@@ -3,10 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 
+type RegisterRole = "CUSTOMER" | "AGENT" | "PARTNER_UNDERWRITER" | "PARTNER_VIEWER";
+
 export default function RegisterPage(): React.JSX.Element {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<RegisterRole>("CUSTOMER");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +22,7 @@ export default function RegisterPage(): React.JSX.Element {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ name, email, password, roles: [role] })
       });
 
       if (!res.ok) {
@@ -65,6 +68,23 @@ export default function RegisterPage(): React.JSX.Element {
               className="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-pine focus:ring-1 focus:ring-pine"
               placeholder="Jane Smith"
             />
+          </div>
+
+          <div>
+            <label htmlFor="role" className="block text-sm font-medium text-ink">
+              Account type
+            </label>
+            <select
+              id="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value as RegisterRole)}
+              className="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-pine focus:ring-1 focus:ring-pine"
+            >
+              <option value="CUSTOMER">Customer</option>
+              <option value="AGENT">Agent</option>
+              <option value="PARTNER_UNDERWRITER">Partner Underwriter</option>
+              <option value="PARTNER_VIEWER">Partner Viewer</option>
+            </select>
           </div>
 
           <div>

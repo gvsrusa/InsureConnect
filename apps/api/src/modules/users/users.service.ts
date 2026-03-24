@@ -34,7 +34,7 @@ export class UsersService {
     email: string;
     fullName: string;
     password: string;
-    role?: UserRole;
+    roles?: UserRole[];
   }) {
     const existing = await this.prisma.user.findUnique({
       where: { email: params.email }
@@ -44,7 +44,9 @@ export class UsersService {
     }
 
     const passwordHash = await bcrypt.hash(params.password, BCRYPT_ROUNDS);
-    const defaultRole = params.role ?? UserRole.CUSTOMER;
+    const assignedRoles = Array.from(
+      new Set(params.roles?.length ? params.roles : [UserRole.CUSTOMER])
+    );
 
     return this.prisma.user.create({
       data: {
@@ -52,11 +54,7 @@ export class UsersService {
         fullName: params.fullName,
         passwordHash,
         roles: {
-          create: [
-            {
-              role: defaultRole
-            }
-          ]
+          create: assignedRoles.map((role) => ({ role }))
         }
       },
       include: { roles: true }

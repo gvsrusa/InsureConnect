@@ -5,7 +5,13 @@ import { getApiBaseUrl } from "@/lib/api-base";
 const API_BASE = getApiBaseUrl();
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const body = await req.json() as { name?: string; fullName?: string; email?: string; password?: string };
+  const body = await req.json() as {
+    name?: string;
+    fullName?: string;
+    email?: string;
+    password?: string;
+    roles?: string[];
+  };
 
   const upstream = await fetch(`${API_BASE}/api/v1/auth/register`, {
     method: "POST",
@@ -13,7 +19,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     body: JSON.stringify({
       fullName: body.fullName ?? body.name,
       email: body.email,
-      password: body.password
+      password: body.password,
+      roles: body.roles
     })
   });
 
