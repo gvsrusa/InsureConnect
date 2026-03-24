@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import NavTabs from "./NavTabs";
-import RoleSwitcher from "./RoleSwitcher";
+import AccountMenu from "./AccountMenu";
 
 type NavVariant = "customer" | "agent" | "partner";
 
@@ -33,6 +33,8 @@ export default async function TopNav({
   const availableRoles: string[] = userRolesRaw
     ? (JSON.parse(userRolesRaw) as string[])
     : [];
+  const displayName = cookieStore.get("user_name")?.value ?? "Signed in user";
+  const email = cookieStore.get("user_email")?.value ?? "No email available";
 
   return (
     <header className="sticky top-0 z-30 border-b border-[var(--color-border)] bg-white/90 backdrop-blur-md">
@@ -65,19 +67,12 @@ export default async function TopNav({
           {/* Right slot */}
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             {hasToken ? (
-              <>
-                {availableRoles.length > 1 && (
-                  <RoleSwitcher availableRoles={availableRoles} currentVariant={variant} />
-                )}
-                <form action={`/api/auth/logout?portal=${variant}`} method="POST">
-                  <button
-                    type="submit"
-                    className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted hover:bg-gray-100 hover:text-ink sm:px-3 sm:text-sm"
-                  >
-                    Sign out
-                  </button>
-                </form>
-              </>
+              <AccountMenu
+                currentVariant={variant}
+                displayName={displayName}
+                email={email}
+                availableRoles={availableRoles}
+              />
             ) : (
               <>
                 <Link

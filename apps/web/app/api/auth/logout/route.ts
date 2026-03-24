@@ -33,6 +33,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   if (!hasAnyRoleSession) {
     cookieStore.delete("user_roles");
+    cookieStore.delete("user_name");
+    cookieStore.delete("user_email");
+    cookieStore.delete("user_primary_role");
   }
 
   const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";

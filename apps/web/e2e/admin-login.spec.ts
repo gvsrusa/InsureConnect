@@ -4,8 +4,10 @@ test.describe("Admin login flow", () => {
   test("renders dedicated admin login page", async ({ page }) => {
     await page.goto("/admin/login");
 
-    await expect(page.getByRole("heading", { name: "Secure Access" })).toBeVisible();
-    await expect(page.getByText("Admin Portal")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Admin sign in" })).toBeVisible();
+    await expect(
+      page.getByText("Use your admin account to manage users, roles, and audit history.")
+    ).toBeVisible();
     await expect(page.getByRole("textbox", { name: "Admin email" })).toBeVisible();
     await expect(page.getByRole("textbox", { name: "Password" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Sign in as admin" })).toBeVisible();

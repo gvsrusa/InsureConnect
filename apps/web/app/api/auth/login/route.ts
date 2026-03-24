@@ -54,7 +54,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const portal = normalizePortal(body.portal);
   const roleCandidates = candidateRolesForPortal(portal);
 
-  let data: { accessToken?: string; user?: { availableRoles?: string[] } } | null = null;
+  let data: {
+    accessToken?: string;
+    user?: {
+      availableRoles?: string[];
+      fullName?: string;
+      email?: string;
+      role?: string;
+    };
+  } | null = null;
   let finalErrorStatus = 401;
   let finalErrorMessage = "Login failed";
 
@@ -66,7 +74,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     });
 
     if (upstream.ok) {
-      data = await upstream.json() as { accessToken?: string; user?: { availableRoles?: string[] } };
+      data = await upstream.json() as {
+        accessToken?: string;
+        user?: {
+          availableRoles?: string[];
+          fullName?: string;
+          email?: string;
+          role?: string;
+        };
+      };
       break;
     }
 
@@ -137,6 +153,36 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     path: "/",
     maxAge: 60 * 15
   });
+
+  if (data.user?.fullName) {
+    cookieStore.set("user_name", data.user.fullName, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 15
+    });
+  }
+
+  if (data.user?.email) {
+    cookieStore.set("user_email", data.user.email, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 15
+    });
+  }
+
+  if (data.user?.role) {
+    cookieStore.set("user_primary_role", data.user.role, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 15
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }
