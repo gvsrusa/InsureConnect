@@ -19,7 +19,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ message: err.message ?? "Login failed" }, { status: upstream.status });
   }
 
-  const data = await upstream.json() as { accessToken?: string };
+  const data = await upstream.json() as { accessToken?: string; user?: { availableRoles?: string[] } };
   const cookieStore = await cookies();
 
   if (data.accessToken) {
@@ -31,6 +31,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       maxAge: 60 * 15
     });
   }
+
+  const availableRoles = data.user?.availableRoles ?? [];
+  cookieStore.set("user_roles", JSON.stringify(availableRoles), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 15
+  });
 
   return NextResponse.json({ ok: true });
 }

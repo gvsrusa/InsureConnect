@@ -7,7 +7,7 @@ import type { QuoteRequest } from "@/lib/types";
 import Link from "next/link";
 
 interface Props {
-  searchParams: Promise<{ quoteRequestId?: string }>;
+  searchParams: Promise<{ quoteRequestId?: string; error?: string }>;
 }
 
 export const metadata = { title: "Your Quotes — InsureConnect" };
@@ -21,8 +21,97 @@ function formatDate(iso: string): string {
 }
 
 export default async function QuotesPage({ searchParams }: Props): Promise<React.JSX.Element> {
-  const { quoteRequestId } = await searchParams;
+  const { quoteRequestId, error } = await searchParams;
   const token = await getAuthToken();
+
+  if (!quoteRequestId) {
+    return (
+      <main className="min-h-screen bg-cream">
+        <div className="border-b border-[var(--color-border)] bg-white px-4 py-8 sm:px-6">
+          <div className="mx-auto max-w-3xl">
+            <h1 className="text-2xl font-bold text-ink">Get a fresh quote</h1>
+            <p className="mt-2 text-sm text-muted">
+              Submit a few details and we will pull sample carrier quotes instantly.
+            </p>
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+          {error ? (
+            <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+              {error}
+            </div>
+          ) : null}
+
+          <form
+            action="/api/quotes"
+            method="POST"
+            className="space-y-6 rounded-3xl border border-[var(--color-border)] bg-white p-6 shadow-card"
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="space-y-2">
+                <span className="text-sm font-medium text-ink">Name or business</span>
+                <input
+                  name="businessName"
+                  required
+                  defaultValue="Chris Customer"
+                  className="w-full rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm outline-none transition focus:border-pine"
+                />
+              </label>
+              <label className="space-y-2">
+                <span className="text-sm font-medium text-ink">Coverage type</span>
+                <select
+                  name="coverageType"
+                  defaultValue="AUTO"
+                  className="w-full rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm outline-none transition focus:border-pine"
+                >
+                  <option value="AUTO">Auto</option>
+                  <option value="HOME">Home</option>
+                  <option value="COMMERCIAL">Commercial</option>
+                </select>
+              </label>
+              <label className="space-y-2">
+                <span className="text-sm font-medium text-ink">State</span>
+                <input
+                  name="state"
+                  required
+                  minLength={2}
+                  maxLength={2}
+                  defaultValue="TX"
+                  className="w-full rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm uppercase outline-none transition focus:border-pine"
+                />
+              </label>
+              <label className="space-y-2">
+                <span className="text-sm font-medium text-ink">Annual revenue</span>
+                <input
+                  name="annualRevenue"
+                  type="number"
+                  min={1}
+                  required
+                  defaultValue={125000}
+                  className="w-full rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm outline-none transition focus:border-pine"
+                />
+              </label>
+            </div>
+
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm text-muted">
+                This creates a real quote request in the local database.
+              </p>
+              <button
+                type="submit"
+                className="rounded-xl bg-pine px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-pine-dark"
+              >
+                Create quote →
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <LilyChatWidget />
+      </main>
+    );
+  }
 
   // TODO: GET /api/v1/portal/quotes/:id — this endpoint requires JWT auth.
   //       Partner-shared links may not have a session, so either:
@@ -31,7 +120,7 @@ export default async function QuotesPage({ searchParams }: Props): Promise<React
   //       For now, fallback to mock data when no auth token or API returns 404.
   let quoteRequest: QuoteRequest | null = null;
 
-  if (quoteRequestId && quoteRequestId !== "demo") {
+  if (quoteRequestId !== "demo") {
     try {
       quoteRequest = await portalApi.quotes(quoteRequestId, token);
     } catch (err) {
@@ -87,6 +176,12 @@ export default async function QuotesPage({ searchParams }: Props): Promise<React
       </div>
 
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+        {error ? (
+          <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+            {error}
+          </div>
+        ) : null}
+
         {/* Best deal callout */}
         {cheapest && (
           <div className="mb-6 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
@@ -152,12 +247,24 @@ export default async function QuotesPage({ searchParams }: Props): Promise<React
               )}
 
               <div className="mt-4 flex items-center gap-3">
-                <Link
-                  href={token ? `/policies?bindQuoteId=${quote.id}` : "/register"}
-                  className="rounded-xl bg-pine px-5 py-2 text-sm font-semibold text-white hover:bg-pine-dark transition-colors"
-                >
-                  {token ? "Bind this policy →" : "Sign up to bind →"}
-                </Link>
+                {token ? (
+                  <form action={`/api/quotes/${quoteRequest.id}/bind`} method="POST">
+                    <input type="hidden" name="quoteId" value={quote.id} />
+                    <button
+                      type="submit"
+                      className="rounded-xl bg-pine px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-pine-dark"
+                    >
+                      Bind this policy →
+                    </button>
+                  </form>
+                ) : (
+                  <Link
+                    href="/register"
+                    className="rounded-xl bg-pine px-5 py-2 text-sm font-semibold text-white hover:bg-pine-dark transition-colors"
+                  >
+                    Sign up to bind →
+                  </Link>
+                )}
                 <p className="text-xs text-muted">No commitment required</p>
               </div>
             </article>

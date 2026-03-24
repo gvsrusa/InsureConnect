@@ -34,6 +34,10 @@ COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/packages/shared/package.json ./packages/shared/package.json
 COPY --from=builder /app/prisma ./prisma
 
+# Entrypoint: migrate DB schema then start API
+COPY apps/api/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 4000
 
-CMD ["node", "apps/api/dist/main.js"]
+ENTRYPOINT ["/entrypoint.sh"]

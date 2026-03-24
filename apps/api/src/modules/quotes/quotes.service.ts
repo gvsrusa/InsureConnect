@@ -45,7 +45,8 @@ export class QuotesService {
 
   async createQuoteRequest(
     dto: CreateQuoteRequestDto,
-    partnerId: string
+    partnerId: string,
+    requesterId?: string
   ): Promise<QuoteRequestResponse> {
     const cacheKey = this.buildCacheKey(dto, partnerId);
     const cached = await this.cacheService.get<QuoteRequestResponse>(cacheKey);
@@ -58,6 +59,7 @@ export class QuotesService {
       data: {
         externalRef: randomUUID(),
         partnerId,
+        requesterId,
         businessName: dto.businessName,
         coverageType: dto.coverageType,
         state: dto.state,

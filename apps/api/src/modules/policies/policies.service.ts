@@ -29,7 +29,8 @@ export class PoliciesService {
 
   async bindPolicy(
     dto: BindPolicyDto,
-    partnerId: string
+    partnerId: string,
+    userId?: string
   ): Promise<PolicyDetail> {
     // Validate the quote request belongs to this partner
     const quoteRequest = await this.prisma.quoteRequest.findFirst({
@@ -69,6 +70,7 @@ export class PoliciesService {
       data: {
         quoteRequestId: dto.quoteRequestId,
         quoteId: dto.quoteId,
+        userId: userId ?? quoteRequest.requesterId ?? null,
         policyNumber,
         carrierName: quote.carrierName,
         premiumCents: quote.premiumCents,

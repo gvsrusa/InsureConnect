@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import NavTabs from "./NavTabs";
+import RoleSwitcher from "./RoleSwitcher";
 
 type NavVariant = "customer" | "agent" | "partner";
 
@@ -13,6 +14,10 @@ export default async function TopNav({
 }: TopNavProps): Promise<React.JSX.Element> {
   const cookieStore = await cookies();
   const hasToken = !!cookieStore.get("access_token")?.value;
+  const userRolesRaw = cookieStore.get("user_roles")?.value;
+  const availableRoles: string[] = userRolesRaw
+    ? (JSON.parse(userRolesRaw) as string[])
+    : [];
 
   return (
     <header className="sticky top-0 z-30 border-b border-[var(--color-border)] bg-white/90 backdrop-blur-md">
@@ -47,14 +52,19 @@ export default async function TopNav({
         {/* Right slot */}
         <div className="flex shrink-0 items-center gap-2">
           {hasToken ? (
-            <form action="/api/auth/logout" method="POST">
-              <button
-                type="submit"
-                className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted hover:bg-gray-100 hover:text-ink"
-              >
-                Sign out
-              </button>
-            </form>
+            <>
+              {availableRoles.length > 1 && (
+                <RoleSwitcher availableRoles={availableRoles} currentVariant={variant} />
+              )}
+              <form action="/api/auth/logout" method="POST">
+                <button
+                  type="submit"
+                  className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted hover:bg-gray-100 hover:text-ink"
+                >
+                  Sign out
+                </button>
+              </form>
+            </>
           ) : (
             <Link
               href="/login"

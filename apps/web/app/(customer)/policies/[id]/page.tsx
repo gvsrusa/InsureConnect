@@ -4,6 +4,7 @@ import { MOCK_POLICIES } from "@/lib/mock-data";
 import StatusBadge from "@/components/domain/StatusBadge";
 import DigitalInsuranceCard from "@/components/domain/DigitalInsuranceCard";
 import LilyChatWidget from "@/components/domain/LilyChatWidget";
+import BackBreadcrumb from "@/components/domain/BackBreadcrumb";
 import type { Policy } from "@/lib/types";
 import Link from "next/link";
 
@@ -52,12 +53,12 @@ export default async function PolicyDetailPage({ params }: Props): Promise<React
 
   return (
     <>
-      {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-2 text-sm text-muted">
-        <Link href="/policies" className="hover:text-pine">Policies</Link>
-        <span>›</span>
-        <span className="text-ink">{policy.policyNumber}</span>
-      </nav>
+      {/* Breadcrumb – shown only when navigated from the policies list */}
+      <BackBreadcrumb
+        listHref="/policies"
+        listLabel="Policies"
+        currentLabel={policy.policyNumber}
+      />
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main content */}

@@ -23,6 +23,7 @@ export interface AuthResponse extends TokenPair {
     email: string;
     fullName: string;
     role: string;
+    availableRoles: string[];
   };
 }
 
@@ -104,29 +105,34 @@ export class AuthService {
     }
   }
 
-  private async buildAuthResponse(user: User): Promise<AuthResponse> {
+  private async buildAuthResponse(user: User & { roles: any[] }): Promise<AuthResponse> {
     const tokens = await this.signTokens(user);
+    const availableRoles = user.roles?.map(r => r.role) || [];
+    const role = availableRoles[0] || "CUSTOMER";
     return {
       ...tokens,
       user: {
         id: user.id,
         email: user.email,
         fullName: user.fullName,
-        role: user.role
+        role,
+        availableRoles
       }
     };
   }
 
-  private signTokens(user: User): TokenPair {
+  private signTokens(user: User & { roles: any[] }): TokenPair {
     const jti = randomUUID();
+    const availableRoles = user.roles?.map(r => r.role) || [];
+    const role = availableRoles[0] || "CUSTOMER";
 
     const accessToken = this.jwtService.sign(
-      { sub: user.id, email: user.email, role: user.role },
+      { sub: user.id, email: user.email, role },
       { expiresIn: ACCESS_TOKEN_EXPIRY }
     );
 
     const refreshToken = this.jwtService.sign(
-      { sub: user.id, email: user.email, role: user.role, jti },
+      { sub: user.id, email: user.email, role, jti },
       {
         secret: this.configService.getOrThrow<string>("JWT_REFRESH_SECRET"),
         expiresIn: "7d"
