@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -11,9 +12,12 @@ import {
 import { Request, Response } from "express";
 
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
+import { CurrentUser, JwtUser } from "../../common/decorators/current-user.decorator";
 import { Public } from "../../common/decorators/public.decorator";
+import { UsersService } from "../users/users.service";
 import { AuthService } from "./auth.service";
 import { LoginDto } from "./dto/login.dto";
+import { MutateRolesDto } from "./dto/mutate-roles.dto";
 import { RegisterDto } from "./dto/register.dto";
 
 const REFRESH_COOKIE = "refresh_token";
@@ -22,7 +26,10 @@ const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
 @Controller("api/v1/auth")
 @UseGuards(JwtAuthGuard)
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService
+  ) {}
 
   @Public()
   @Post("register")
@@ -69,6 +76,42 @@ export class AuthController {
       await this.authService.logout(token);
     }
     res.clearCookie(REFRESH_COOKIE);
+  }
+
+  @Get("me/roles")
+  async getMyRoles(@CurrentUser() currentUser: JwtUser) {
+    const roles = await this.usersService.getUserRoles(currentUser.userId);
+    return {
+      userId: currentUser.userId,
+      email: currentUser.email,
+      roles
+    };
+  }
+
+  @Post("me/roles/add")
+  async addMyRoles(
+    @CurrentUser() currentUser: JwtUser,
+    @Body() dto: MutateRolesDto
+  ) {
+    const user = await this.usersService.addRoles(currentUser.userId, dto.roles);
+    return {
+      userId: user.id,
+      email: user.email,
+      roles: user.roles.map((assignment) => assignment.role)
+    };
+  }
+
+  @Post("me/roles/remove")
+  async removeMyRoles(
+    @CurrentUser() currentUser: JwtUser,
+    @Body() dto: MutateRolesDto
+  ) {
+    const user = await this.usersService.removeRoles(currentUser.userId, dto.roles);
+    return {
+      userId: user.id,
+      email: user.email,
+      roles: user.roles.map((assignment) => assignment.role)
+    };
   }
 
   private setRefreshCookie(res: Response, token: string): void {

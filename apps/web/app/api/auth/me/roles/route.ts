@@ -1,0 +1,100 @@
+import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
+
+import { getApiBaseUrl } from "@/lib/api-base";
+
+const API_BASE = getApiBaseUrl();
+
+type Portal = "customer" | "agent" | "partner";
+type RoleMutationAction = "add" | "remove";
+
+function normalizePortal(value: string | undefined): Portal {
+  if (value === "agent") return "agent";
+  if (value === "partner") return "partner";
+  return "customer";
+}
+
+function accessCookieName(portal: Portal): string {
+  if (portal === "agent") return "access_token_agent";
+  if (portal === "partner") return "access_token_partner";
+  return "access_token_customer";
+}
+
+async function resolveToken(portal: Portal): Promise<string | undefined> {
+  const cookieStore = await cookies();
+  return (
+    cookieStore.get(accessCookieName(portal))?.value ??
+    cookieStore.get("access_token")?.value
+  );
+}
+
+export async function GET(req: NextRequest): Promise<NextResponse> {
+  const portal = normalizePortal(req.nextUrl.searchParams.get("portal") ?? undefined);
+  const token = await resolveToken(portal);
+
+  if (!token) {
+    return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
+  }
+
+  const upstream = await fetch(`${API_BASE}/api/v1/auth/me/roles`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    cache: "no-store"
+  });
+
+  if (!upstream.ok) {
+    const err = (await upstream.json().catch(() => ({ message: "Unable to fetch roles" }))) as {
+      message?: string;
+    };
+    return NextResponse.json({ message: err.message ?? "Unable to fetch roles" }, { status: upstream.status });
+  }
+
+  const data = (await upstream.json()) as unknown;
+  return NextResponse.json(data);
+}
+
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  const body = (await req.json()) as {
+    portal?: string;
+    action?: RoleMutationAction;
+    roles?: string[];
+  };
+
+  const portal = normalizePortal(body.portal);
+  const token = await resolveToken(portal);
+  const action = body.action ?? "add";
+
+  if (!token) {
+    return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
+  }
+
+  const upstreamPath = action === "remove" ? "/api/v1/auth/me/roles/remove" : "/api/v1/auth/me/roles/add";
+  const upstream = await fetch(`${API_BASE}${upstreamPath}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ roles: body.roles ?? [] })
+  });
+
+  if (!upstream.ok) {
+    const err = (await upstream.json().catch(() => ({ message: "Unable to update roles" }))) as {
+      message?: string;
+    };
+    return NextResponse.json({ message: err.message ?? "Unable to update roles" }, { status: upstream.status });
+  }
+
+  const data = (await upstream.json()) as { roles?: string[] };
+  const cookieStore = await cookies();
+  cookieStore.set("user_roles", JSON.stringify(data.roles ?? []), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 15
+  });
+
+  return NextResponse.json(data);
+}

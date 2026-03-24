@@ -133,6 +133,12 @@ function LoginForm(): React.JSX.Element {
             Register
           </Link>
         </p>
+        <p className="mt-2 text-center text-sm text-muted">
+          Already signed in?{" "}
+          <Link href="/roles" className="font-semibold text-pine hover:underline">
+            Manage roles
+          </Link>
+        </p>
       </div>
     </div>
   );
