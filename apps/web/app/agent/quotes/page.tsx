@@ -57,7 +57,8 @@ export default async function AgentQuotesPage(): Promise<React.JSX.Element> {
       </div>
 
       <div className="rounded-2xl border border-[var(--color-border)] bg-white shadow-card overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-sm">
           <thead className="border-b border-[var(--color-border)] bg-gray-50">
             <tr>
               {["ID", "Client", "Type", "Quotes", "Status", "Requested", "Actions"].map((h) => (
@@ -70,29 +71,30 @@ export default async function AgentQuotesPage(): Promise<React.JSX.Element> {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
-            {quoteRequests.map((qr) => (
-              <tr key={qr.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3 font-mono text-xs text-muted">{qr.id.slice(0, 8)}</td>
-                <td className="px-4 py-3 text-ink">{qr.clientEmail ?? "—"}</td>
-                <td className="px-4 py-3 text-ink">{qr.productType}</td>
-                <td className="px-4 py-3 text-ink">{qr.quotes.length}</td>
-                <td className="px-4 py-3">
-                  <StatusBadge status={qr.status} />
-                </td>
-                <td className="px-4 py-3 text-muted">{timeAgo(qr.createdAt)}</td>
-                <td className="px-4 py-3">
-                  <Link
-                    href={`/agent/quotes/${qr.id}`}
-                    className="text-pine text-xs font-semibold hover:underline"
-                  >
-                    View
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            <tbody className="divide-y divide-gray-50">
+              {quoteRequests.map((qr) => (
+                <tr key={qr.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3 font-mono text-xs text-muted">{qr.id.slice(0, 8)}</td>
+                  <td className="px-4 py-3 text-ink">{qr.clientEmail ?? "—"}</td>
+                  <td className="px-4 py-3 text-ink">{qr.productType}</td>
+                  <td className="px-4 py-3 text-ink">{qr.quotes.length}</td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={qr.status} />
+                  </td>
+                  <td className="px-4 py-3 text-muted">{timeAgo(qr.createdAt)}</td>
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/agent/quotes/${qr.id}`}
+                      className="text-pine text-xs font-semibold hover:underline"
+                    >
+                      View
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {quoteRequests.length === 0 && (
           <div className="py-14 text-center text-sm text-muted">No quote requests yet.</div>

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Sora } from "next/font/google";
 
 import "./globals.css";
@@ -12,6 +12,12 @@ const sora = Sora({
 export const metadata: Metadata = {
   title: "InsureConnect",
   description: "Commercial lines insurance workflow platform"
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover"
 };
 
 export default function RootLayout({

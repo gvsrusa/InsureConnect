@@ -14,12 +14,18 @@ const BCRYPT_ROUNDS = 12;
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.prisma.user.findUnique({ where: { email } });
+  async findByEmail(email: string) {
+    return this.prisma.user.findUnique({
+      where: { email },
+      include: { roles: true }
+    });
   }
 
-  async findById(id: string): Promise<User> {
-    const user = await this.prisma.user.findUnique({ where: { id } });
+  async findById(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: { roles: true }
+    });
     if (!user) throw new NotFoundException(`User ${id} not found`);
     return user;
   }
@@ -29,7 +35,7 @@ export class UsersService {
     fullName: string;
     password: string;
     role?: UserRole;
-  }): Promise<User> {
+  }) {
     const existing = await this.prisma.user.findUnique({
       where: { email: params.email }
     });
@@ -38,14 +44,22 @@ export class UsersService {
     }
 
     const passwordHash = await bcrypt.hash(params.password, BCRYPT_ROUNDS);
+    const defaultRole = params.role ?? UserRole.CUSTOMER;
 
     return this.prisma.user.create({
       data: {
         email: params.email,
         fullName: params.fullName,
         passwordHash,
-        role: params.role ?? UserRole.ADMIN
-      }
+        roles: {
+          create: [
+            {
+              role: defaultRole
+            }
+          ]
+        }
+      },
+      include: { roles: true }
     });
   }
 
@@ -54,7 +68,16 @@ export class UsersService {
     return bcrypt.compare(password, user.passwordHash);
   }
 
-  async findAllAgents(): Promise<User[]> {
-    return this.prisma.user.findMany({ where: { role: UserRole.AGENT } });
+  async findAllAgents() {
+    return this.prisma.user.findMany({
+      where: {
+        roles: {
+          some: {
+            role: UserRole.AGENT
+          }
+        }
+      },
+      include: { roles: true }
+    });
   }
 }

@@ -16,16 +16,56 @@ function hashApiKey(rawKey: string): string {
 }
 
 async function main(): Promise<void> {
+  // Create/update agent user
+  // bcrypt hash of 'Password1!' (12 rounds) — for local dev/testing only
+  const agentPasswordHash = "$2b$12$MfLKRRSm9fDSe2QAiSuYqudfakKqmuHjRJdvE7iE1kd8wFsQnXflW";
+
   const agent = await prisma.user.upsert({
     where: { email: "agent@insureconnect.local" },
     update: {
       fullName: "Alex Agent",
-      role: UserRole.AGENT
+      passwordHash: agentPasswordHash
     },
     create: {
       email: "agent@insureconnect.local",
       fullName: "Alex Agent",
+      passwordHash: agentPasswordHash
+    }
+  });
+
+  // Assign AGENT role to agent user
+  await prisma.userRoleAssignment.upsert({
+    where: { userId_role: { userId: agent.id, role: UserRole.AGENT } },
+    update: {},
+    create: {
+      userId: agent.id,
       role: UserRole.AGENT
+    }
+  });
+
+  // Create/update customer user
+  const customerPasswordHash = "$2b$12$MfLKRRSm9fDSe2QAiSuYqudfakKqmuHjRJdvE7iE1kd8wFsQnXflW";
+
+  const customer = await prisma.user.upsert({
+    where: { email: "customer@insureconnect.local" },
+    update: {
+      fullName: "Chris Customer",
+      passwordHash: customerPasswordHash
+    },
+    create: {
+      email: "customer@insureconnect.local",
+      fullName: "Chris Customer",
+      passwordHash: customerPasswordHash
+    }
+  });
+
+  // Assign CUSTOMER role to customer user
+  await prisma.userRoleAssignment.upsert({
+    where: { userId_role: { userId: customer.id, role: UserRole.CUSTOMER } },
+    update: {},
+    create: {
+      userId: customer.id,
+      role: UserRole.CUSTOMER
     }
   });
 
@@ -127,6 +167,100 @@ async function main(): Promise<void> {
       payload: {
         source: "seed",
         notes: "Initial sample policy issuance"
+      }
+    }
+  });
+
+  const customerQuoteRequest = await prisma.quoteRequest.upsert({
+    where: { externalRef: "QR-0002" },
+    update: {
+      requesterId: customer.id,
+      status: QuoteRequestStatus.IN_REVIEW
+    },
+    create: {
+      externalRef: "QR-0002",
+      partnerId: partner.id,
+      requesterId: customer.id,
+      businessName: "Chris Customer",
+      coverageType: "AUTO",
+      state: "TX",
+      annualRevenue: 125000,
+      status: QuoteRequestStatus.IN_REVIEW
+    }
+  });
+
+  await prisma.quote.deleteMany({
+    where: { quoteRequestId: customerQuoteRequest.id }
+  });
+
+  await prisma.quote.createMany({
+    data: [
+      {
+        quoteRequestId: customerQuoteRequest.id,
+        carrierName: "Progressive",
+        premiumCents: 9600,
+        annualPremiumCents: 115200,
+        termMonths: 12,
+        status: QuoteStatus.READY,
+        coverageSummary: {
+          liability: 250000,
+          collision: 500,
+          comprehensive: 250
+        }
+      },
+      {
+        quoteRequestId: customerQuoteRequest.id,
+        carrierName: "State Farm",
+        premiumCents: 10450,
+        annualPremiumCents: 125400,
+        termMonths: 12,
+        status: QuoteStatus.READY,
+        coverageSummary: {
+          liability: 300000,
+          collision: 500,
+          roadside: true
+        }
+      }
+    ]
+  });
+
+  const customerQuote = await prisma.quote.findFirstOrThrow({
+    where: { quoteRequestId: customerQuoteRequest.id },
+    orderBy: { annualPremiumCents: "asc" }
+  });
+
+  const customerPolicy = await prisma.policy.upsert({
+    where: { policyNumber: "POL-0002" },
+    update: {
+      userId: customer.id,
+      quoteRequestId: customerQuoteRequest.id,
+      quoteId: customerQuote.id,
+      status: PolicyStatus.ACTIVE
+    },
+    create: {
+      quoteRequestId: customerQuoteRequest.id,
+      quoteId: customerQuote.id,
+      userId: customer.id,
+      policyNumber: "POL-0002",
+      carrierName: customerQuote.carrierName,
+      premiumCents: customerQuote.annualPremiumCents ?? customerQuote.premiumCents * 12,
+      status: PolicyStatus.ACTIVE,
+      effectiveDate: new Date("2026-02-01T00:00:00.000Z"),
+      expirationDate: new Date("2027-02-01T00:00:00.000Z")
+    }
+  });
+
+  await prisma.policyEvent.deleteMany({
+    where: { policyId: customerPolicy.id }
+  });
+
+  await prisma.policyEvent.create({
+    data: {
+      policyId: customerPolicy.id,
+      type: PolicyEventType.ISSUED,
+      payload: {
+        source: "seed",
+        notes: "Customer sample policy"
       }
     }
   });

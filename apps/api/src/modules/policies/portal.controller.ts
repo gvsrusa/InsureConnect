@@ -1,15 +1,23 @@
-import { Controller, Get, NotFoundException, Param } from "@nestjs/common";
+import { Body, Controller, Get, NotFoundException, Param, Post } from "@nestjs/common";
 import { PolicyStatus, UserRole } from "@prisma/client";
 
 import { CurrentUser, JwtUser } from "../../common/decorators/current-user.decorator";
 import { PrismaService } from "../../prisma/prisma.service";
+import { PoliciesService } from "./policies.service";
+import { BindPolicyDto } from "./dto/bind-policy.dto";
+import { QuotesService } from "../quotes/quotes.service";
+import { CreateQuoteRequestDto } from "../quotes/dto/create-quote-request.dto";
 
 type PortalPolicyRecord = Awaited<ReturnType<PrismaService["policy"]["findMany"]>>[number];
 type PortalQuoteRequestRecord = Awaited<ReturnType<PrismaService["quoteRequest"]["findFirst"]>>;
 
 @Controller("api/v1/portal")
 export class PortalController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly quotesService: QuotesService,
+    private readonly policiesService: PoliciesService
+  ) {}
 
   @Get("dashboard")
   async dashboard(@CurrentUser() user: JwtUser) {
@@ -111,7 +119,13 @@ export class PortalController {
   @Get("agent")
   async agent() {
     const agent = await this.prisma.user.findFirst({
-      where: { role: UserRole.AGENT },
+      where: {
+        roles: {
+          some: {
+            role: UserRole.AGENT
+          }
+        }
+      },
       orderBy: { createdAt: "asc" }
     });
 
@@ -135,10 +149,30 @@ export class PortalController {
     };
   }
 
+  @Post("quotes")
+  async createQuoteRequest(
+    @Body() dto: CreateQuoteRequestDto,
+    @CurrentUser() user: JwtUser
+  ) {
+    const partner = await this.prisma.partner.findFirst({
+      where: { isActive: true },
+      orderBy: { createdAt: "asc" }
+    });
+
+    if (!partner) {
+      throw new NotFoundException("No active quoting partner is available");
+    }
+
+    return this.quotesService.createQuoteRequest(dto, partner.id, user.userId);
+  }
+
   @Get("quotes/:id")
-  async quoteRequest(@Param("id") id: string) {
+  async quoteRequest(@Param("id") id: string, @CurrentUser() user: JwtUser) {
     const quoteRequest = await this.prisma.quoteRequest.findFirst({
-      where: { id },
+      where: {
+        id,
+        ...(user.role === UserRole.ADMIN ? {} : { requesterId: user.userId })
+      },
       include: {
         requester: true,
         quotes: {
@@ -152,6 +186,37 @@ export class PortalController {
     }
 
     return this.toQuoteRequest(quoteRequest);
+  }
+
+  @Post("quotes/:id/bind")
+  async bindQuoteRequest(
+    @Param("id") id: string,
+    @Body() body: Omit<BindPolicyDto, "quoteRequestId">,
+    @CurrentUser() user: JwtUser
+  ) {
+    const quoteRequest = await this.prisma.quoteRequest.findFirst({
+      where: {
+        id,
+        ...(user.role === UserRole.ADMIN ? {} : { requesterId: user.userId })
+      },
+      select: {
+        id: true,
+        partnerId: true
+      }
+    });
+
+    if (!quoteRequest) {
+      throw new NotFoundException(`Quote request ${id} not found`);
+    }
+
+    return this.policiesService.bindPolicy(
+      {
+        quoteRequestId: quoteRequest.id,
+        quoteId: body.quoteId
+      },
+      quoteRequest.partnerId,
+      user.userId
+    );
   }
 
   private toPolicy(policy: PortalPolicyRecord & {
