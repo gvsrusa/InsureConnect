@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "prisma studio --schema ./schema.prisma",
+    "prisma": "prisma",
     "generate": "prisma generate --schema ./schema.prisma",
     "seed": "tsx ./seed.ts",
     "build": "echo \"No build step for prisma package\"",
