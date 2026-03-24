@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@insureconnect/shared": [
+        "packages/shared/src"
+      ],
+      "@insureconnect/shared/*": [
+        "packages/shared/src/*"
+      ]
+    }
+  }
+}

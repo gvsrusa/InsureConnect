@@ -1,0 +1,8 @@
+import { Module } from "@nestjs/common";
+import { CarriersService } from "./carriers.service";
+
+@Module({
+  providers: [CarriersService],
+  exports: [CarriersService]
+})
+export class CarriersModule {}

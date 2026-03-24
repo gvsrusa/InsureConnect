@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  AGENT
+  PARTNER_UNDERWRITER
+  PARTNER_VIEWER
+}
+
+enum QuoteRequestStatus {
+  NEW
+  IN_REVIEW
+  QUOTED
+  DECLINED
+}
+
+enum QuoteStatus {
+  PENDING
+  READY
+  DECLINED
+}
+
+enum PolicyStatus {
+  DRAFT
+  ACTIVE
+  CANCELLED
+  EXPIRED
+}
+
+enum PolicyEventType {
+  CREATED
+  UPDATED
+  ISSUED
+  CANCELLED
+  RENEWED
+}
+
+enum AssignmentStatus {
+  ASSIGNED
+  ACCEPTED
+  RELEASED
+}
+
+model User {
+  id               String            @id @default(cuid())
+  email            String            @unique
+  fullName         String
+  passwordHash     String?
+  role             UserRole
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  quoteRequests    QuoteRequest[]    @relation("RequestedByUser")
+  policies         Policy[]
+  agentAssignments AgentAssignment[] @relation("AssignedAgent")
+}
+
+model Partner {
+  id                 String            @id @default(cuid())
+  name               String
+  slug               String            @unique
+  apiKey             String            @unique
+  apiKeyPrefix       String
+  isActive           Boolean           @default(true)
+  rateLimitPerMinute Int               @default(60)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  quoteRequests      QuoteRequest[]
+  agentAssignments   AgentAssignment[]
+}
+
+model QuoteRequest {
+  id               String            @id @default(cuid())
+  externalRef      String            @unique
+  partnerId        String
+  requesterId      String?
+  businessName     String
+  coverageType     String
+  state            String
+  annualRevenue    Int
+  status           QuoteRequestStatus @default(NEW)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  partner          Partner           @relation(fields: [partnerId], references: [id])
+  requester        User?             @relation("RequestedByUser", fields: [requesterId], references: [id])
+  quotes           Quote[]
+  policies         Policy[]
+  agentAssignments AgentAssignment[]
+}
+
+model Quote {
+  id                 String       @id @default(cuid())
+  quoteRequestId     String
+  carrierName        String
+  premiumCents       Int
+  annualPremiumCents Int?
+  termMonths         Int
+  coverageSummary    Json?
+  status             QuoteStatus  @default(PENDING)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  quoteRequest       QuoteRequest @relation(fields: [quoteRequestId], references: [id])
+  policies           Policy[]
+}
+
+model Policy {
+  id             String       @id @default(cuid())
+  quoteRequestId String
+  quoteId        String?
+  userId         String?
+  policyNumber   String       @unique
+  carrierName    String
+  premiumCents   Int
+  status         PolicyStatus @default(DRAFT)
+  effectiveDate  DateTime
+  expirationDate DateTime
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  quoteRequest   QuoteRequest @relation(fields: [quoteRequestId], references: [id])
+  quote          Quote?       @relation(fields: [quoteId], references: [id])
+  user           User?        @relation(fields: [userId], references: [id])
+  events         PolicyEvent[]
+}
+
+model PolicyEvent {
+  id        String          @id @default(cuid())
+  policyId  String
+  type      PolicyEventType
+  payload   Json?
+  createdAt DateTime        @default(now())
+  policy    Policy          @relation(fields: [policyId], references: [id])
+}
+
+model AgentAssignment {
+  id             String           @id @default(cuid())
+  quoteRequestId String
+  agentId        String
+  partnerId      String?
+  status         AssignmentStatus @default(ASSIGNED)
+  assignedAt     DateTime         @default(now())
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  quoteRequest   QuoteRequest     @relation(fields: [quoteRequestId], references: [id])
+  agent          User             @relation("AssignedAgent", fields: [agentId], references: [id])
+  partner        Partner?         @relation(fields: [partnerId], references: [id])
+
+  @@unique([quoteRequestId, agentId])
+}

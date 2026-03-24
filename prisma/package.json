@@ -1,0 +1,21 @@
+{
+  "name": "@insureconnect/prisma",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "prisma studio --schema ./schema.prisma",
+    "generate": "prisma generate --schema ./schema.prisma",
+    "seed": "tsx ./seed.ts",
+    "build": "echo \"No build step for prisma package\"",
+    "lint": "echo \"No lint step for prisma package\"",
+    "test": "echo \"No tests yet for prisma package\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0",
+    "tsx": "^4.19.2"
+  }
+}

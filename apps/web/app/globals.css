@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Forest green palette — Goosehead-inspired */
+  --color-pine: #1b6b3a;         /* Primary forest green */
+  --color-pine-dark: #14532d;    /* Dark fill / agent card header */
+  --color-moss: #2d8c6b;         /* Medium green / secondary */
+  --color-forest-light: #22c55e; /* Light green / highlights */
+  --color-amber: #f4b63f;        /* Accent / warning */
+  --color-cream: #f7f4e8;        /* Page background */
+  --color-ink: #163028;          /* Primary text */
+  --color-surface: #ffffff;      /* Card surface */
+  --color-border: #e2e8f0;       /* Default border */
+  --color-muted: #64748b;        /* Secondary text */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  background: radial-gradient(circle at 15% 10%, #fffef6 0%, #f7f4e8 45%, #efe8d0 100%);
+  color: var(--color-ink);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
