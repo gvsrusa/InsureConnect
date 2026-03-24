@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import StatusBadge from "@/components/domain/StatusBadge";
 import BackBreadcrumb from "@/components/domain/BackBreadcrumb";
 import { agentApi, ApiError } from "@/lib/api";
