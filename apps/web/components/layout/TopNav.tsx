@@ -64,6 +64,12 @@ export default async function TopNav({
 
           {/* Right slot */}
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <Link
+              href="/admin/login"
+              className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted hover:bg-gray-100 hover:text-ink sm:px-3 sm:text-sm"
+            >
+              Admin Login
+            </Link>
             {hasToken ? (
               <>
                 {availableRoles.length > 1 && (

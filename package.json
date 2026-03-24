@@ -13,6 +13,7 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "test:e2e": "playwright test",
     "format": "prettier --write .",
     "typecheck": "turbo run typecheck",
     "prisma:generate": "npm --workspace prisma run generate",
@@ -23,6 +24,7 @@
     "compose:down:prod": "docker compose -f infra/docker-compose.prod.yml down"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/node": "^22.10.2",
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",

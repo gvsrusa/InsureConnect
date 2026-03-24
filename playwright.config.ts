@@ -1,0 +1,13 @@
+import { defineConfig } from "@playwright/test";
+
+export default defineConfig({
+  testDir: "./apps/web/e2e",
+  timeout: 30_000,
+  expect: {
+    timeout: 5_000
+  },
+  use: {
+    baseURL: process.env["E2E_BASE_URL"] ?? "http://localhost",
+    trace: "on-first-retry"
+  }
+});
