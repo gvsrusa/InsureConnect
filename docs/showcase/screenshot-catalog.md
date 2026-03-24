@@ -44,6 +44,12 @@ This catalog maps each screenshot to the feature, role, and business value it de
 - File: [docs/screenshots/customer/02-policies-list.png](../screenshots/customer/02-policies-list.png)
 - Demonstrates: policy visibility and list-level navigation.
 
+### Customer Policy Detail
+![Customer Policy Detail](../screenshots/customer/03-policy-detail.png)
+
+- File: [docs/screenshots/customer/03-policy-detail.png](../screenshots/customer/03-policy-detail.png)
+- Demonstrates: customer list-to-detail navigation and policy detail content rendering.
+
 ## Agent
 
 ### Agent Dashboard
@@ -63,6 +69,12 @@ This catalog maps each screenshot to the feature, role, and business value it de
 
 - File: [docs/screenshots/agent/03-quotes-filter-pending.png](../screenshots/agent/03-quotes-filter-pending.png)
 - Demonstrates: working status filter behavior via URL parameter.
+
+### Agent Quote Detail
+![Agent Quote Detail](../screenshots/agent/04-quote-detail.png)
+
+- File: [docs/screenshots/agent/04-quote-detail.png](../screenshots/agent/04-quote-detail.png)
+- Demonstrates: quote-level detail visibility from agent queue actions.
 
 ### Agent Policies List
 ![Agent Policies List](../screenshots/agent/05-policies-list.png)

@@ -32,8 +32,8 @@ node docs/capture-showcase-screenshots.cjs
 
 - Public: login, register, admin login
 - Shared: role management
-- Customer: dashboard, policies list
-- Agent: dashboard, quotes (all + filtered), policies list, policy detail
+- Customer: dashboard, policies list, policy detail
+- Agent: dashboard, quotes (all + filtered + detail), policies list, policy detail
 - Partner: dashboard, quotes list, policies list, policy detail
 - Admin: role management, audit log
 

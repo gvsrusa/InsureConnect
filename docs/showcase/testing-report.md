@@ -65,16 +65,19 @@ Evidence:
 - Customer login successful.
 - Customer dashboard rendered.
 - Customer policies list rendered.
+- Customer policy detail rendered.
 
 Evidence:
 - [docs/screenshots/customer/01-dashboard.png](../screenshots/customer/01-dashboard.png)
 - [docs/screenshots/customer/02-policies-list.png](../screenshots/customer/02-policies-list.png)
+- [docs/screenshots/customer/03-policy-detail.png](../screenshots/customer/03-policy-detail.png)
 
 ### Agent
 
 - Agent dashboard rendered.
 - Agent quote list rendered.
 - Pending filter path rendered with filtered state (`status=PENDING`).
+- Agent quote detail rendered.
 - Agent policies list rendered.
 - Agent policy detail rendered.
 
@@ -82,6 +85,7 @@ Evidence:
 - [docs/screenshots/agent/01-dashboard.png](../screenshots/agent/01-dashboard.png)
 - [docs/screenshots/agent/02-quotes-all.png](../screenshots/agent/02-quotes-all.png)
 - [docs/screenshots/agent/03-quotes-filter-pending.png](../screenshots/agent/03-quotes-filter-pending.png)
+- [docs/screenshots/agent/04-quote-detail.png](../screenshots/agent/04-quote-detail.png)
 - [docs/screenshots/agent/05-policies-list.png](../screenshots/agent/05-policies-list.png)
 - [docs/screenshots/agent/06-policy-detail.png](../screenshots/agent/06-policy-detail.png)
 

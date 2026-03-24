@@ -28,6 +28,10 @@ async function loginPortal(page, portal, email, password) {
   await page.getByRole("textbox", { name: "Email" }).fill(email);
   await page.getByRole("textbox", { name: "Password" }).fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
+
+  await page.waitForFunction(() => !window.location.pathname.endsWith("/login"), null, {
+    timeout: 20000
+  });
   await page.waitForLoadState("networkidle");
 }
 
@@ -68,6 +72,20 @@ async function main() {
       await shot(page, "customer/01-dashboard.png");
 
       await page.goto(`${BASE}/roles`, { waitUntil: "networkidle" });
+
+      // The roles page requires an explicit refresh to load DB-backed role data.
+      const refreshRolesButton = page.getByRole("button", { name: /refresh roles/i });
+      if (await refreshRolesButton.count()) {
+        await refreshRolesButton.click();
+        await page.waitForLoadState("networkidle");
+        await page.waitForFunction(() => {
+          const button = Array.from(document.querySelectorAll("button")).find(
+            (el) => /refresh roles/i.test((el.textContent || "").trim())
+          );
+          return Boolean(button);
+        });
+      }
+
       await shot(page, "shared/01-role-management.png");
 
       await page.goto(`${BASE}/policies`, { waitUntil: "networkidle" });
