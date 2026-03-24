@@ -15,6 +15,12 @@ function accessCookieName(variant: NavVariant): string {
   return "access_token_customer";
 }
 
+function homeHref(variant: NavVariant): string {
+  if (variant === "agent") return "/agent/dashboard";
+  if (variant === "partner") return "/partner/dashboard";
+  return "/dashboard";
+}
+
 export default async function TopNav({
   variant
 }: TopNavProps): Promise<React.JSX.Element> {
@@ -34,7 +40,7 @@ export default async function TopNav({
         <div className="flex min-h-14 items-center justify-between gap-3">
           {/* Logo */}
           <Link
-            href="/"
+            href={homeHref(variant)}
             className="flex shrink-0 items-center gap-2 text-pine"
             aria-label="InsureConnect home"
           >
