@@ -92,7 +92,8 @@ export default function RoleSwitcher({
         <button
           type="button"
           onClick={() => setDropdownOpen((o) => !o)}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-muted hover:bg-gray-100 hover:text-ink transition-colors"
+          className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-muted transition-colors hover:bg-gray-100 hover:text-ink sm:gap-1.5 sm:px-3 sm:text-sm"
+          aria-label="Switch role"
           aria-haspopup="true"
           aria-expanded={dropdownOpen}
         >
@@ -118,7 +119,7 @@ export default function RoleSwitcher({
               strokeLinejoin="round"
             />
           </svg>
-          Switch role
+          <span className="hidden sm:inline">Switch role</span>
           <svg
             width="12"
             height="12"

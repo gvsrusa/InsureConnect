@@ -41,7 +41,7 @@ export default function NavTabs({ variant }: { variant: NavVariant }): React.JSX
   const items = NAV_ITEMS[variant];
 
   return (
-    <nav className="flex items-center gap-1" aria-label="Primary navigation">
+    <nav className="flex w-full items-center gap-1 overflow-x-auto" aria-label="Primary navigation">
       {items.map((item) => {
         const isActive = isActivePath(pathname, item.href);
 
@@ -50,7 +50,7 @@ export default function NavTabs({ variant }: { variant: NavVariant }): React.JSX
             key={item.href}
             href={item.href}
             className={[
-              "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+              "shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
               isActive
                 ? "bg-pine/10 text-pine"
                 : "text-[var(--color-muted)] hover:bg-gray-100 hover:text-ink"
