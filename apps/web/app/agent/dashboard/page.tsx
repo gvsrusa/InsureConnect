@@ -62,7 +62,8 @@ export default async function AgentDashboardPage(): Promise<React.JSX.Element> {
         </div>
 
         <div className="rounded-2xl border border-[var(--color-border)] bg-white shadow-card overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[680px] text-sm">
             <thead className="border-b border-[var(--color-border)] bg-gray-50">
               <tr>
                 {["Client", "Type", "Status", "Requested", "Action"].map((h) => (
@@ -75,27 +76,28 @@ export default async function AgentDashboardPage(): Promise<React.JSX.Element> {
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
-              {data.recentQuoteRequests.map((qr) => (
-                <tr key={qr.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 text-ink">{qr.clientEmail ?? "—"}</td>
-                  <td className="px-4 py-3 text-ink">{qr.productType}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={qr.status} />
-                  </td>
-                  <td className="px-4 py-3 text-muted">{timeAgo(qr.createdAt)}</td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/agent/quotes/${qr.id}`}
-                      className="text-pine text-xs font-semibold hover:underline"
-                    >
-                      Review →
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              <tbody className="divide-y divide-gray-50">
+                {data.recentQuoteRequests.map((qr) => (
+                  <tr key={qr.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 text-ink">{qr.clientEmail ?? "—"}</td>
+                    <td className="px-4 py-3 text-ink">{qr.productType}</td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={qr.status} />
+                    </td>
+                    <td className="px-4 py-3 text-muted">{timeAgo(qr.createdAt)}</td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/agent/quotes/${qr.id}`}
+                        className="text-pine text-xs font-semibold hover:underline"
+                      >
+                        Review →
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
     </div>
