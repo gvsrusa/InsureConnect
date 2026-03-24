@@ -5,13 +5,55 @@ import { getApiBaseUrl } from "@/lib/api-base";
 
 const API_BASE = getApiBaseUrl();
 
+type Portal = "customer" | "agent" | "partner";
+
+function normalizePortal(value: string | undefined): Portal {
+  if (value === "agent") return "agent";
+  if (value === "partner") return "partner";
+  return "customer";
+}
+
+function primaryRoleForPortal(portal: Portal): string {
+  if (portal === "agent") return "AGENT";
+  if (portal === "partner") return "PARTNER_UNDERWRITER";
+  return "CUSTOMER";
+}
+
+function accessCookieName(portal: Portal): string {
+  if (portal === "agent") return "access_token_agent";
+  if (portal === "partner") return "access_token_partner";
+  return "access_token_customer";
+}
+
+function portalFromRole(role: string): Portal {
+  if (role === "AGENT") return "agent";
+  if (role === "PARTNER_UNDERWRITER" || role === "PARTNER_VIEWER") return "partner";
+  return "customer";
+}
+
+function uniqueRolesByPortal(roles: string[]): string[] {
+  const seen = new Set<Portal>();
+  const out: string[] = [];
+
+  for (const role of roles) {
+    const portal = portalFromRole(role);
+    if (seen.has(portal)) continue;
+    seen.add(portal);
+    out.push(role);
+  }
+
+  return out;
+}
+
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const body = await req.json() as { email?: string; password?: string };
+  const body = await req.json() as { email?: string; password?: string; portal?: string };
+  const portal = normalizePortal(body.portal);
+  const preferredRole = primaryRoleForPortal(portal);
 
   const upstream = await fetch(`${API_BASE}/api/v1/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
+    body: JSON.stringify({ email: body.email, password: body.password, role: preferredRole })
   });
 
   if (!upstream.ok) {
@@ -23,7 +65,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const cookieStore = await cookies();
 
   if (data.accessToken) {
-    cookieStore.set("access_token", data.accessToken, {
+    cookieStore.set(accessCookieName(portal), data.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -33,6 +75,45 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   const availableRoles = data.user?.availableRoles ?? [];
+
+  // Pre-mint one token per portal to support seamless role-tab switching.
+  const fallbackRoles = uniqueRolesByPortal(
+    availableRoles.filter((role) => role !== preferredRole)
+  );
+
+  for (const role of fallbackRoles) {
+    const rolePortal = portalFromRole(role);
+    const roleRes = await fetch(`${API_BASE}/api/v1/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: body.email, password: body.password, role })
+    });
+
+    if (!roleRes.ok) continue;
+
+    const roleData = await roleRes.json() as { accessToken?: string };
+    if (!roleData.accessToken) continue;
+
+    cookieStore.set(accessCookieName(rolePortal), roleData.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 15
+    });
+  }
+
+  // Legacy fallback cookie for any old code paths.
+  if (data.accessToken) {
+    cookieStore.set("access_token", data.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 15
+    });
+  }
+
   cookieStore.set("user_roles", JSON.stringify(availableRoles), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

@@ -9,11 +9,20 @@ interface TopNavProps {
   variant: NavVariant;
 }
 
+function accessCookieName(variant: NavVariant): string {
+  if (variant === "agent") return "access_token_agent";
+  if (variant === "partner") return "access_token_partner";
+  return "access_token_customer";
+}
+
 export default async function TopNav({
   variant
 }: TopNavProps): Promise<React.JSX.Element> {
   const cookieStore = await cookies();
-  const hasToken = !!cookieStore.get("access_token")?.value;
+  const hasToken = Boolean(
+    cookieStore.get(accessCookieName(variant))?.value ||
+      cookieStore.get("access_token")?.value
+  );
   const userRolesRaw = cookieStore.get("user_roles")?.value;
   const availableRoles: string[] = userRolesRaw
     ? (JSON.parse(userRolesRaw) as string[])
@@ -54,7 +63,7 @@ export default async function TopNav({
                 {availableRoles.length > 1 && (
                   <RoleSwitcher availableRoles={availableRoles} currentVariant={variant} />
                 )}
-                <form action="/api/auth/logout" method="POST">
+                <form action={`/api/auth/logout?portal=${variant}`} method="POST">
                   <button
                     type="submit"
                     className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted hover:bg-gray-100 hover:text-ink sm:px-3 sm:text-sm"

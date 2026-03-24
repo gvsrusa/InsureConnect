@@ -4,7 +4,7 @@ import {
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
-import { User } from "@prisma/client";
+import { User, UserRole } from "@prisma/client";
 import { randomUUID } from "crypto";
 
 import { CacheService } from "../../common/cache/cache.service";
@@ -60,7 +60,7 @@ export class AuthService {
       throw new UnauthorizedException("Invalid credentials");
     }
 
-    return this.buildAuthResponse(user);
+    return this.buildAuthResponse(user, dto.role);
   }
 
   async refresh(refreshToken: string): Promise<TokenPair> {
@@ -81,7 +81,7 @@ export class AuthService {
     }
 
     const user = await this.usersService.findById(payload.sub);
-    return this.signTokens(user);
+    return this.signTokens(user, payload.role as UserRole);
   }
 
   async logout(refreshToken: string): Promise<void> {
@@ -105,10 +105,14 @@ export class AuthService {
     }
   }
 
-  private async buildAuthResponse(user: User & { roles: any[] }): Promise<AuthResponse> {
-    const tokens = await this.signTokens(user);
+  private async buildAuthResponse(
+    user: User & { roles: Array<{ role: UserRole }> },
+    preferredRole?: UserRole
+  ): Promise<AuthResponse> {
+    const role = this.resolveRole(user, preferredRole);
+    const tokens = await this.signTokens(user, role);
     const availableRoles = user.roles?.map(r => r.role) || [];
-    const role = availableRoles[0] || "CUSTOMER";
+
     return {
       ...tokens,
       user: {
@@ -121,10 +125,11 @@ export class AuthService {
     };
   }
 
-  private signTokens(user: User & { roles: any[] }): TokenPair {
+  private signTokens(
+    user: User & { roles: Array<{ role: UserRole }> },
+    role: UserRole
+  ): TokenPair {
     const jti = randomUUID();
-    const availableRoles = user.roles?.map(r => r.role) || [];
-    const role = availableRoles[0] || "CUSTOMER";
 
     const accessToken = this.jwtService.sign(
       { sub: user.id, email: user.email, role },
@@ -140,5 +145,21 @@ export class AuthService {
     );
 
     return { accessToken, refreshToken };
+  }
+
+  private resolveRole(
+    user: User & { roles: Array<{ role: UserRole }> },
+    preferredRole?: UserRole
+  ): UserRole {
+    const availableRoles = user.roles?.map((r) => r.role) ?? [];
+
+    if (preferredRole) {
+      if (!availableRoles.includes(preferredRole)) {
+        throw new UnauthorizedException("Requested role is not assigned to this user");
+      }
+      return preferredRole;
+    }
+
+    return availableRoles[0] ?? UserRole.CUSTOMER;
   }
 }
