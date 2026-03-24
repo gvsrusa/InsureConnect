@@ -1,13 +1,33 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 
-export default function LoginPage(): React.JSX.Element {
+type Portal = "customer" | "agent" | "partner";
+
+function normalizePortal(value: string | null): Portal {
+  if (value === "agent") return "agent";
+  if (value === "partner") return "partner";
+  return "customer";
+}
+
+function defaultPortalPath(portal: Portal): string {
+  if (portal === "agent") return "/agent/dashboard";
+  if (portal === "partner") return "/partner/dashboard";
+  return "/dashboard";
+}
+
+function LoginForm(): React.JSX.Element {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const portal = normalizePortal(searchParams.get("portal"));
+  const redirectTo = searchParams.get("redirect") ?? defaultPortalPath(portal);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -18,7 +38,7 @@ export default function LoginPage(): React.JSX.Element {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password, portal })
       });
 
       if (!res.ok) {
@@ -27,8 +47,7 @@ export default function LoginPage(): React.JSX.Element {
         return;
       }
 
-      // Redirect based on role stored in JWT (server reads cookie from Set-Cookie header)
-      window.location.href = "/dashboard";
+      window.location.href = redirectTo;
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -40,7 +59,7 @@ export default function LoginPage(): React.JSX.Element {
     <div className="w-full max-w-sm">
       <div className="rounded-2xl border border-[var(--color-border)] bg-white p-8 shadow-card">
         <h1 className="text-xl font-bold text-ink">Welcome back</h1>
-        <p className="mt-1 text-sm text-muted">Sign in to your InsureConnect account</p>
+        <p className="mt-1 text-sm text-muted">Sign in to your {portal} portal</p>
 
         {error && (
           <div role="alert" className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -100,5 +119,13 @@ export default function LoginPage(): React.JSX.Element {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage(): React.JSX.Element {
+  return (
+    <Suspense fallback={<div className="w-full max-w-sm" />}>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -75,6 +75,28 @@ export const portalApi = {
   agent: (token: string) =>
     apiFetch<Agent>("/api/v1/portal/agent", bearer(token)),
 
+  createQuoteRequest: (
+    body: {
+      businessName: string;
+      coverageType: "AUTO" | "HOME" | "COMMERCIAL";
+      state: string;
+      annualRevenue: number;
+    },
+    token: string
+  ) =>
+    apiFetch<{ quoteRequestId: string }>("/api/v1/portal/quotes", {
+      method: "POST",
+      body: JSON.stringify(body),
+      ...bearer(token)
+    }),
+
+  bindQuote: (quoteRequestId: string, quoteId: string, token: string) =>
+    apiFetch<{ id: string }>(`/api/v1/portal/quotes/${quoteRequestId}/bind`, {
+      method: "POST",
+      body: JSON.stringify({ quoteId }),
+      ...bearer(token)
+    }),
+
   quotes: (quoteRequestId: string, token?: string) =>
     apiFetch<QuoteRequest>(
       `/api/v1/portal/quotes/${quoteRequestId}`,

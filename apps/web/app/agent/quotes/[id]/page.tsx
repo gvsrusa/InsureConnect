@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import StatusBadge from "@/components/domain/StatusBadge";
+import BackBreadcrumb from "@/components/domain/BackBreadcrumb";
 import { agentApi, ApiError } from "@/lib/api";
 import { requireAuth } from "@/lib/auth";
 import { MOCK_QUOTE_REQUEST } from "@/lib/mock-data";
@@ -36,11 +37,12 @@ export default async function AgentQuoteDetailPage({ params }: Props): Promise<R
 
   return (
     <div className="space-y-6">
-      <nav className="flex items-center gap-2 text-sm text-muted">
-        <Link href="/agent/quotes" className="hover:text-pine">Quote Requests</Link>
-        <span>/</span>
-        <span className="text-ink">{quoteRequest.id}</span>
-      </nav>
+      {/* Breadcrumb – only visible when navigated from the quotes list */}
+      <BackBreadcrumb
+        listHref="/agent/quotes"
+        listLabel="Quote Requests"
+        currentLabel={quoteRequest.id}
+      />
 
       <div className="rounded-2xl border border-[var(--color-border)] bg-white p-6 shadow-card">
         <div className="flex flex-wrap items-start justify-between gap-4">

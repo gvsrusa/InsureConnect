@@ -10,6 +10,7 @@ datasource db {
 
 enum UserRole {
   ADMIN
+  CUSTOMER
   AGENT
   PARTNER_UNDERWRITER
   PARTNER_VIEWER
@@ -50,16 +51,26 @@ enum AssignmentStatus {
 }
 
 model User {
-  id               String            @id @default(cuid())
-  email            String            @unique
-  fullName         String
-  passwordHash     String?
-  role             UserRole
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  quoteRequests    QuoteRequest[]    @relation("RequestedByUser")
-  policies         Policy[]
-  agentAssignments AgentAssignment[] @relation("AssignedAgent")
+  id                String              @id @default(cuid())
+  email             String              @unique
+  fullName          String
+  passwordHash      String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  quoteRequests     QuoteRequest[]      @relation("RequestedByUser")
+  policies          Policy[]
+  agentAssignments  AgentAssignment[]   @relation("AssignedAgent")
+  roles             UserRoleAssignment[]
+}
+
+model UserRoleAssignment {
+  id        String   @id @default(cuid())
+  userId    String
+  role      UserRole
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
 }
 
 model Partner {
