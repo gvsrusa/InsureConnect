@@ -69,6 +69,58 @@ async function main(): Promise<void> {
     }
   });
 
+  // Create/update partner underwriter user
+  const partnerUnderwriterPasswordHash = "$2b$12$MfLKRRSm9fDSe2QAiSuYqudfakKqmuHjRJdvE7iE1kd8wFsQnXflW";
+
+  const partnerUnderwriter = await prisma.user.upsert({
+    where: { email: "underwriter@insureconnect.local" },
+    update: {
+      fullName: "Pat Underwriter",
+      passwordHash: partnerUnderwriterPasswordHash
+    },
+    create: {
+      email: "underwriter@insureconnect.local",
+      fullName: "Pat Underwriter",
+      passwordHash: partnerUnderwriterPasswordHash
+    }
+  });
+
+  // Assign PARTNER_UNDERWRITER role to underwriter user
+  await prisma.userRoleAssignment.upsert({
+    where: { userId_role: { userId: partnerUnderwriter.id, role: UserRole.PARTNER_UNDERWRITER } },
+    update: {},
+    create: {
+      userId: partnerUnderwriter.id,
+      role: UserRole.PARTNER_UNDERWRITER
+    }
+  });
+
+  // Create/update partner viewer user
+  const partnerViewerPasswordHash = "$2b$12$MfLKRRSm9fDSe2QAiSuYqudfakKqmuHjRJdvE7iE1kd8wFsQnXflW";
+
+  const partnerViewer = await prisma.user.upsert({
+    where: { email: "viewer@insureconnect.local" },
+    update: {
+      fullName: "Val Viewer",
+      passwordHash: partnerViewerPasswordHash
+    },
+    create: {
+      email: "viewer@insureconnect.local",
+      fullName: "Val Viewer",
+      passwordHash: partnerViewerPasswordHash
+    }
+  });
+
+  // Assign PARTNER_VIEWER role to viewer user
+  await prisma.userRoleAssignment.upsert({
+    where: { userId_role: { userId: partnerViewer.id, role: UserRole.PARTNER_VIEWER } },
+    update: {},
+    create: {
+      userId: partnerViewer.id,
+      role: UserRole.PARTNER_VIEWER
+    }
+  });
+
   const partner = await prisma.partner.upsert({
     where: { slug: "oakline-partners" },
     update: {
