@@ -27,11 +27,7 @@ services:
     depends_on:
       web:
         condition: service_started
-      api-1:
-        condition: service_started
-      api-2:
-        condition: service_started
-      api-3:
+      api:
         condition: service_started
     ports:
       - "80:80"
@@ -39,13 +35,7 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     restart: unless-stopped
 
-  api-1:
-    <<: *api-common
-
-  api-2:
-    <<: *api-common
-
-  api-3:
+  api:
     <<: *api-common
 
   web:
