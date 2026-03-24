@@ -91,6 +91,7 @@ jobs:
         run: |
           npm run prisma:generate
           npm --workspace prisma run prisma db push -- --accept-data-loss
+          npm run prisma:seed
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
