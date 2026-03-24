@@ -5,27 +5,31 @@ import { getApiBaseUrl } from "@/lib/api-base";
 
 const API_BASE = getApiBaseUrl();
 
-type Portal = "customer" | "agent" | "partner";
+type Portal = "customer" | "agent" | "partner" | "admin";
 
 function normalizePortal(value: string | undefined): Portal {
+  if (value === "admin") return "admin";
   if (value === "agent") return "agent";
   if (value === "partner") return "partner";
   return "customer";
 }
 
 function candidateRolesForPortal(portal: Portal): string[] {
+  if (portal === "admin") return ["ADMIN"];
   if (portal === "agent") return ["AGENT"];
   if (portal === "partner") return ["PARTNER_UNDERWRITER", "PARTNER_VIEWER"];
-  return ["CUSTOMER", "ADMIN"];
+  return ["CUSTOMER"];
 }
 
 function accessCookieName(portal: Portal): string {
+  if (portal === "admin") return "access_token_admin";
   if (portal === "agent") return "access_token_agent";
   if (portal === "partner") return "access_token_partner";
   return "access_token_customer";
 }
 
 function portalFromRole(role: string): Portal {
+  if (role === "ADMIN") return "admin";
   if (role === "AGENT") return "agent";
   if (role === "PARTNER_UNDERWRITER" || role === "PARTNER_VIEWER") return "partner";
   return "customer";

@@ -5,15 +5,17 @@ import { Suspense } from "react";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-type Portal = "customer" | "agent" | "partner";
+type Portal = "customer" | "agent" | "partner" | "admin";
 
 function normalizePortal(value: string | null): Portal {
+  if (value === "admin") return "admin";
   if (value === "agent") return "agent";
   if (value === "partner") return "partner";
   return "customer";
 }
 
 function defaultPortalPath(portal: Portal): string {
+  if (portal === "admin") return "/admin/roles";
   if (portal === "agent") return "/agent/dashboard";
   if (portal === "partner") return "/partner/dashboard";
   return "/dashboard";
@@ -81,6 +83,7 @@ function LoginForm(): React.JSX.Element {
               <option value="customer">Customer Portal</option>
               <option value="agent">Agent Console</option>
               <option value="partner">Partner Portal</option>
+              <option value="admin">Admin Portal</option>
             </select>
           </div>
 
@@ -140,15 +143,12 @@ function LoginForm(): React.JSX.Element {
           </Link>
         </p>
         <p className="mt-1 text-center text-sm text-muted">
-          Admin only: {" "}
-          <Link href="/admin/roles" className="font-semibold text-pine hover:underline">
-            Manage user roles by email
-          </Link>
-        </p>
-        <p className="mt-1 text-center text-sm text-muted">
-          Admin only: {" "}
-          <Link href="/admin/audit" className="font-semibold text-pine hover:underline">
-            View role audit history
+          Admin?{" "}
+          <Link
+            href="/admin/login"
+            className="font-semibold text-pine hover:underline"
+          >
+            Use admin sign in
           </Link>
         </p>
       </div>

@@ -5,15 +5,17 @@ import { getApiBaseUrl } from "@/lib/api-base";
 
 const API_BASE = getApiBaseUrl();
 
-type Portal = "customer" | "agent" | "partner";
+type Portal = "customer" | "agent" | "partner" | "admin";
 
 function normalizePortal(value: string | undefined): Portal {
+  if (value === "admin") return "admin";
   if (value === "agent") return "agent";
   if (value === "partner") return "partner";
   return "customer";
 }
 
 function accessCookieName(portal: Portal): string {
+  if (portal === "admin") return "access_token_admin";
   if (portal === "agent") return "access_token_agent";
   if (portal === "partner") return "access_token_partner";
   return "access_token_customer";

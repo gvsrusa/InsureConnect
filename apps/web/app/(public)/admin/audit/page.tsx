@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-type Portal = "customer" | "agent" | "partner";
-
 type AuditLog = {
   id: string;
   actor: { id: string; email: string };
@@ -18,7 +16,6 @@ type AuditResponse = {
 };
 
 export default function AdminAuditPage(): React.JSX.Element {
-  const [portal, setPortal] = useState<Portal>("customer");
   const [email, setEmail] = useState("");
   const [limit, setLimit] = useState(50);
   const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -31,7 +28,7 @@ export default function AdminAuditPage(): React.JSX.Element {
 
     try {
       const query = new URLSearchParams({
-        portal,
+        portal: "admin",
         limit: String(limit)
       });
       if (email) {
@@ -66,23 +63,7 @@ export default function AdminAuditPage(): React.JSX.Element {
           View who changed roles, what changed, and when.
         </p>
 
-        <div className="mt-5 grid gap-4 sm:grid-cols-4">
-          <div>
-            <label htmlFor="portal" className="block text-sm font-medium text-ink">
-              Admin portal token
-            </label>
-            <select
-              id="portal"
-              value={portal}
-              onChange={(e) => setPortal(e.target.value as Portal)}
-              className="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-pine focus:ring-1 focus:ring-pine"
-            >
-              <option value="customer">Customer</option>
-              <option value="agent">Agent</option>
-              <option value="partner">Partner</option>
-            </select>
-          </div>
-
+        <div className="mt-5 grid gap-4 sm:grid-cols-3">
           <div className="sm:col-span-2">
             <label htmlFor="email" className="block text-sm font-medium text-ink">
               Filter by target email (optional)

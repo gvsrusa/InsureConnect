@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 const PROTECTED_PATTERNS = [
   /^\/dashboard/,
   /^\/policies/,
+  /^\/admin\/(roles|audit)/,
   /^\/agent(?!\/|$)/,   // /agent page but not /agent/* (that's the agent portal)
   /^\/agent\/dashboard/,
   /^\/agent\/quotes/,
@@ -13,7 +14,11 @@ const PROTECTED_PATTERNS = [
   /^\/partner\/policies/
 ];
 
-function resolvePortal(pathname: string): "customer" | "agent" | "partner" {
+function resolvePortal(pathname: string): "customer" | "agent" | "partner" | "admin" {
+  if (pathname.startsWith("/admin/")) {
+    return "admin";
+  }
+
   if (pathname.startsWith("/agent/")) {
     return "agent";
   }
@@ -25,7 +30,8 @@ function resolvePortal(pathname: string): "customer" | "agent" | "partner" {
   return "customer";
 }
 
-function accessCookieName(portal: "customer" | "agent" | "partner"): string {
+function accessCookieName(portal: "customer" | "agent" | "partner" | "admin"): string {
+  if (portal === "admin") return "access_token_admin";
   if (portal === "agent") return "access_token_agent";
   if (portal === "partner") return "access_token_partner";
   return "access_token_customer";

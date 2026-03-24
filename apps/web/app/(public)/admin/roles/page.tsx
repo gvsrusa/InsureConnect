@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-type Portal = "customer" | "agent" | "partner";
 type MutableRole = "CUSTOMER" | "AGENT" | "PARTNER_UNDERWRITER" | "PARTNER_VIEWER";
 
 type UserRolesResponse = {
@@ -18,7 +17,6 @@ const ROLE_OPTIONS: Array<{ value: MutableRole; label: string }> = [
 ];
 
 export default function AdminRolesPage(): React.JSX.Element {
-  const [portal, setPortal] = useState<Portal>("customer");
   const [email, setEmail] = useState("");
   const [selectedRoles, setSelectedRoles] = useState<MutableRole[]>([]);
   const [result, setResult] = useState<UserRolesResponse | null>(null);
@@ -42,7 +40,7 @@ export default function AdminRolesPage(): React.JSX.Element {
 
     try {
       const res = await fetch(
-        `/api/auth/admin/user-roles?portal=${portal}&email=${encodeURIComponent(email)}`,
+        `/api/auth/admin/user-roles?portal=admin&email=${encodeURIComponent(email)}`,
         { cache: "no-store" }
       );
 
@@ -82,7 +80,7 @@ export default function AdminRolesPage(): React.JSX.Element {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          portal,
+          portal: "admin",
           email,
           action,
           roles: selectedRoles
@@ -114,22 +112,6 @@ export default function AdminRolesPage(): React.JSX.Element {
         </p>
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="portal" className="block text-sm font-medium text-ink">
-              Admin portal token
-            </label>
-            <select
-              id="portal"
-              value={portal}
-              onChange={(e) => setPortal(e.target.value as Portal)}
-              className="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-pine focus:ring-1 focus:ring-pine"
-            >
-              <option value="customer">Customer</option>
-              <option value="agent">Agent</option>
-              <option value="partner">Partner</option>
-            </select>
-          </div>
-
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-ink">
               User email
