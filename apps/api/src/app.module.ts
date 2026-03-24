@@ -6,6 +6,7 @@ import { ValidationPipe } from "@nestjs/common";
 import { HealthController } from "./health/health.controller";
 import { PrismaModule } from "./prisma/prisma.module";
 import { CacheModule } from "./common/cache/cache.module";
+import { QueueModule } from "./common/queue/queue.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { UsersModule } from "./modules/users/users.module";
 import { PartnersModule } from "./modules/partners/partners.module";
@@ -14,6 +15,8 @@ import { QuotesModule } from "./modules/quotes/quotes.module";
 import { AgentsModule } from "./modules/agents/agents.module";
 import { PoliciesModule } from "./modules/policies/policies.module";
 import { PartnerApiModule } from "./modules/partner-api/partner-api.module";
+import { AnalyticsModule } from "./modules/analytics/analytics.module";
+import { WebhooksModule } from "./modules/webhooks/webhooks.module";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { RolesGuard } from "./common/guards/roles.guard";
 
@@ -25,6 +28,7 @@ import { RolesGuard } from "./common/guards/roles.guard";
     }),
     PrismaModule,
     CacheModule,
+    QueueModule,
     AuthModule,
     UsersModule,
     PartnersModule,
@@ -32,7 +36,9 @@ import { RolesGuard } from "./common/guards/roles.guard";
     QuotesModule,
     AgentsModule,
     PoliciesModule,
-    PartnerApiModule
+    PartnerApiModule,
+    AnalyticsModule,
+    WebhooksModule
   ],
   controllers: [HealthController],
   providers: [

@@ -1,0 +1,167 @@
+name: Prisma Migrations
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'prisma/schema.prisma'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-migrations:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: insureconnect_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
+
+      - name: Create migration (if needed)
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/insureconnect_test
+        run: |
+          npm --workspace prisma run prisma migrate dev --skip-generate --create-only --name schema_update || true
+
+      - name: Validate migrations
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/insureconnect_test
+        run: npm --workspace prisma run prisma migrate deploy
+
+      - name: Check for uncommitted migrations
+        run: |
+          if [ -n "$(git status --porcelain prisma/migrations/)" ]; then
+            echo "New migrations detected"
+            git add prisma/migrations/
+            exit 0
+          fi
+
+  deploy-preview:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x]
+    if: github.event_name == 'pull_request'
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: insureconnect_preview
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
+
+      - name: Test migrations on preview database
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/insureconnect_preview
+        run: npm --workspace prisma run prisma migrate deploy
+
+      - name: Comment PR with migration status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ job.status }}' === 'success' ? '✅ Migrations validated' : '❌ Migration validation failed';
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Prisma Migrations\n${status}`
+            });
+
+  production-prepare:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x]
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client for production
+        run: npm run prisma:generate
+
+      - name: Build migration documentation
+        run: |
+          echo "# Production Migration Guide" > MIGRATION_GUIDE.md
+          echo "" >> MIGRATION_GUIDE.md
+          echo "## Steps to deploy migrations:" >> MIGRATION_GUIDE.md
+          echo "" >> MIGRATION_GUIDE.md
+          echo "1. Backup current database" >> MIGRATION_GUIDE.md
+          echo "2. Run: \`npm --workspace prisma run prisma migrate deploy\`" >> MIGRATION_GUIDE.md
+          echo "3. Verify schema matches expectations" >> MIGRATION_GUIDE.md
+          echo "4. Deploy application code" >> MIGRATION_GUIDE.md
+
+      - name: Upload migration guide
+        uses: actions/upload-artifact@v3
+        with:
+          name: migration-guide
+          path: MIGRATION_GUIDE.md

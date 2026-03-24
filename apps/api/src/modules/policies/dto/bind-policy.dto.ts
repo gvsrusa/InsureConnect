@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty, IsString, IsDateString } from "class-validator";
 
 export class BindPolicyDto {
   @IsString()
@@ -8,4 +8,12 @@ export class BindPolicyDto {
   @IsString()
   @IsNotEmpty()
   quoteId!: string;
+
+  @IsDateString()
+  @IsNotEmpty()
+  effectiveDate!: string;
+
+  @IsDateString()
+  @IsNotEmpty()
+  expirationDate!: string;
 }

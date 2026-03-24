@@ -212,7 +212,9 @@ export class PortalController {
     return this.policiesService.bindPolicy(
       {
         quoteRequestId: quoteRequest.id,
-        quoteId: body.quoteId
+        quoteId: body.quoteId,
+        effectiveDate: body.effectiveDate,
+        expirationDate: body.expirationDate
       },
       quoteRequest.partnerId,
       user.userId

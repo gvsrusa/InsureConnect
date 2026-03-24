@@ -17,6 +17,7 @@ import { BindPolicyDto } from "../policies/dto/bind-policy.dto";
 import { PoliciesService } from "../policies/policies.service";
 import { CreateQuoteRequestDto } from "../quotes/dto/create-quote-request.dto";
 import { QuotesService } from "../quotes/quotes.service";
+import { PartnerApiService } from "./partner-api.service";
 
 @Public()
 @Controller("api/v1/partner")
@@ -24,7 +25,8 @@ import { QuotesService } from "../quotes/quotes.service";
 export class PartnerApiController {
   constructor(
     private readonly quotesService: QuotesService,
-    private readonly policiesService: PoliciesService
+    private readonly policiesService: PoliciesService,
+    private readonly partnerApiService: PartnerApiService
   ) {}
 
   @Post("quotes")
@@ -61,5 +63,10 @@ export class PartnerApiController {
   @Get("policies")
   async listPolicies(@CurrentPartner() partner: Partner) {
     return this.policiesService.listPoliciesForPartner(partner.id);
+  }
+
+  @Get("usage-stats")
+  async getUsageStats(@CurrentPartner() partner: Partner) {
+    return this.partnerApiService.getApiUsageStats(partner.id);
   }
 }
