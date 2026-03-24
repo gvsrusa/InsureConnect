@@ -6,7 +6,7 @@
     "dev": "ts-node --project tsconfig.json src/main.ts",
     "build": "tsc -p tsconfig.build.json",
     "lint": "eslint src --ext .ts",
-    "test": "echo \"No tests yet for @insureconnect/api\"",
+    "test": "jest --runInBand",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -27,10 +27,15 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
+    "@nestjs/testing": "^10.4.7",
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.14",
     "@types/passport-jwt": "^4.0.1",
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2"
   }
 }

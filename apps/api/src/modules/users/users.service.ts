@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException
 } from "@nestjs/common";
-import { User, UserRole } from "@prisma/client";
+import { RoleAuditAction, User, UserRole } from "@prisma/client";
 import * as bcrypt from "bcrypt";
 
 import { PrismaService } from "../../prisma/prisma.service";
@@ -93,6 +93,10 @@ export class UsersService {
       skipDuplicates: true
     });
 
+    if (uniqueRoles.length > 0) {
+      await this.logRoleAudit(userId, userId, RoleAuditAction.ADD, uniqueRoles);
+    }
+
     return this.findById(userId);
   }
 
@@ -116,6 +120,110 @@ export class UsersService {
       }
     });
 
+    if (roles.length > 0) {
+      await this.logRoleAudit(userId, userId, RoleAuditAction.REMOVE, roles);
+    }
+
     return this.findById(userId);
+  }
+
+  async getUserRolesByEmail(email: string): Promise<UserRole[]> {
+    const user = await this.findByEmail(email);
+    if (!user) {
+      throw new NotFoundException(`User with email ${email} not found`);
+    }
+    return user.roles.map((assignment) => assignment.role);
+  }
+
+  async addRolesByEmail(actorUserId: string, email: string, roles: UserRole[]) {
+    const target = await this.findByEmail(email);
+    if (!target) {
+      throw new NotFoundException(`User with email ${email} not found`);
+    }
+
+    const uniqueRoles = Array.from(new Set(roles));
+    await this.prisma.userRoleAssignment.createMany({
+      data: uniqueRoles.map((role) => ({ userId: target.id, role })),
+      skipDuplicates: true
+    });
+
+    if (uniqueRoles.length > 0) {
+      await this.logRoleAudit(actorUserId, target.id, RoleAuditAction.ADD, uniqueRoles);
+    }
+
+    return this.findById(target.id);
+  }
+
+  async removeRolesByEmail(actorUserId: string, email: string, roles: UserRole[]) {
+    const target = await this.findByEmail(email);
+    if (!target) {
+      throw new NotFoundException(`User with email ${email} not found`);
+    }
+
+    const removeSet = new Set(roles);
+    const remainingRoles = target.roles
+      .map((assignment) => assignment.role)
+      .filter((role) => !removeSet.has(role));
+
+    if (remainingRoles.length === 0) {
+      throw new ConflictException("A user must have at least one role");
+    }
+
+    await this.prisma.userRoleAssignment.deleteMany({
+      where: {
+        userId: target.id,
+        role: {
+          in: roles
+        }
+      }
+    });
+
+    if (roles.length > 0) {
+      await this.logRoleAudit(actorUserId, target.id, RoleAuditAction.REMOVE, roles);
+    }
+
+    return this.findById(target.id);
+  }
+
+  async getRoleAuditLogs(params?: { targetEmail?: string; limit?: number }) {
+    const limit = Math.min(Math.max(params?.limit ?? 50, 1), 200);
+    let targetUserId: string | undefined;
+
+    if (params?.targetEmail) {
+      const target = await this.findByEmail(params.targetEmail);
+      if (!target) {
+        throw new NotFoundException(`User with email ${params.targetEmail} not found`);
+      }
+      targetUserId = target.id;
+    }
+
+    return this.prisma.roleAuditLog.findMany({
+      where: targetUserId ? { targetUserId } : undefined,
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      include: {
+        actor: { select: { id: true, email: true } },
+        target: { select: { id: true, email: true } }
+      }
+    });
+  }
+
+  private async logRoleAudit(
+    actorUserId: string,
+    targetUserId: string,
+    action: RoleAuditAction,
+    roles: UserRole[]
+  ) {
+    const uniqueRoles = Array.from(new Set(roles));
+    if (uniqueRoles.length === 0) return;
+
+    await this.prisma.roleAuditLog.create({
+      data: {
+        actorUserId,
+        targetUserId,
+        action,
+        roles: uniqueRoles
+      }
+    });
   }
 }

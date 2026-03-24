@@ -139,6 +139,18 @@ function LoginForm(): React.JSX.Element {
             Manage roles
           </Link>
         </p>
+        <p className="mt-1 text-center text-sm text-muted">
+          Admin only: {" "}
+          <Link href="/admin/roles" className="font-semibold text-pine hover:underline">
+            Manage user roles by email
+          </Link>
+        </p>
+        <p className="mt-1 text-center text-sm text-muted">
+          Admin only: {" "}
+          <Link href="/admin/audit" className="font-semibold text-pine hover:underline">
+            View role audit history
+          </Link>
+        </p>
       </div>
     </div>
   );

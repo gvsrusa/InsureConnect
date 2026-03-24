@@ -16,7 +16,7 @@ function normalizePortal(value: string | undefined): Portal {
 function candidateRolesForPortal(portal: Portal): string[] {
   if (portal === "agent") return ["AGENT"];
   if (portal === "partner") return ["PARTNER_UNDERWRITER", "PARTNER_VIEWER"];
-  return ["CUSTOMER"];
+  return ["CUSTOMER", "ADMIN"];
 }
 
 function accessCookieName(portal: Portal): string {

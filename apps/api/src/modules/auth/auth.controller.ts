@@ -4,16 +4,20 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
+  Query,
   Req,
   Res,
   UseGuards
 } from "@nestjs/common";
+import { UserRole } from "@prisma/client";
 import { Request, Response } from "express";
 
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { CurrentUser, JwtUser } from "../../common/decorators/current-user.decorator";
 import { Public } from "../../common/decorators/public.decorator";
+import { Roles } from "../../common/decorators/roles.decorator";
 import { UsersService } from "../users/users.service";
 import { AuthService } from "./auth.service";
 import { LoginDto } from "./dto/login.dto";
@@ -111,6 +115,76 @@ export class AuthController {
       userId: user.id,
       email: user.email,
       roles: user.roles.map((assignment) => assignment.role)
+    };
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Get("admin/users/:email/roles")
+  async getUserRolesByEmail(@Param("email") email: string) {
+    const roles = await this.usersService.getUserRolesByEmail(email);
+    return {
+      email,
+      roles
+    };
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Post("admin/users/:email/roles/add")
+  async addRolesByEmail(
+    @CurrentUser() currentUser: JwtUser,
+    @Param("email") email: string,
+    @Body() dto: MutateRolesDto
+  ) {
+    const user = await this.usersService.addRolesByEmail(currentUser.userId, email, dto.roles);
+    return {
+      userId: user.id,
+      email: user.email,
+      roles: user.roles.map((assignment) => assignment.role)
+    };
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Post("admin/users/:email/roles/remove")
+  async removeRolesByEmail(
+    @CurrentUser() currentUser: JwtUser,
+    @Param("email") email: string,
+    @Body() dto: MutateRolesDto
+  ) {
+    const user = await this.usersService.removeRolesByEmail(currentUser.userId, email, dto.roles);
+    return {
+      userId: user.id,
+      email: user.email,
+      roles: user.roles.map((assignment) => assignment.role)
+    };
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Get("admin/role-audit")
+  async getRoleAudit(
+    @Query("email") email?: string,
+    @Query("limit") limitRaw?: string
+  ) {
+    const limit = limitRaw ? Number(limitRaw) : undefined;
+    const logs = await this.usersService.getRoleAuditLogs({
+      targetEmail: email,
+      limit
+    });
+
+    return {
+      logs: logs.map((log) => ({
+        id: log.id,
+        actor: {
+          id: log.actor.id,
+          email: log.actor.email
+        },
+        target: {
+          id: log.target.id,
+          email: log.target.email
+        },
+        action: log.action,
+        roles: log.roles,
+        createdAt: log.createdAt.toISOString()
+      }))
     };
   }
 
