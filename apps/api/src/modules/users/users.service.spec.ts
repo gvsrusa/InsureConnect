@@ -1,5 +1,5 @@
 import { ConflictException, NotFoundException } from "@nestjs/common";
-import { RoleAuditAction, UserRole } from "@prisma/client";
+import { UserRole } from "@prisma/client";
 
 import { UsersService } from "./users.service";
 
@@ -54,7 +54,7 @@ describe("UsersService role management", () => {
       data: {
         actorUserId: "admin-1",
         targetUserId: "target-1",
-        action: RoleAuditAction.ADD,
+        action: "ADD",
         roles: [UserRole.AGENT]
       }
     });
@@ -99,7 +99,7 @@ describe("UsersService role management", () => {
     prisma.roleAuditLog.findMany.mockResolvedValue([
       {
         id: "log-1",
-        action: RoleAuditAction.ADD,
+        action: "ADD",
         roles: [UserRole.AGENT],
         createdAt: new Date("2026-03-24T00:00:00.000Z"),
         actor: { id: "admin-1", email: "admin@example.com" },
