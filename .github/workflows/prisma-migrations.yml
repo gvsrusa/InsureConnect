@@ -161,7 +161,8 @@ jobs:
           echo "4. Deploy application code" >> MIGRATION_GUIDE.md
 
       - name: Upload migration guide
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: migration-guide
+          if-no-files-found: ignore
           path: MIGRATION_GUIDE.md

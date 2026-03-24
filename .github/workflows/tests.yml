@@ -31,9 +31,10 @@ jobs:
 
       - name: Upload coverage
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-reports
+          if-no-files-found: ignore
           path: |
             coverage/
             test-results/
@@ -91,6 +92,31 @@ jobs:
           npm run prisma:generate
           npm --workspace prisma run prisma db push -- --accept-data-loss
 
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Start API server
+        env:
+          NODE_ENV: test
+          PORT: 4000
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/insureconnect
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_SECRET: test-jwt-secret-for-ci-only
+          JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-ci-only
+          CORS_ORIGIN: http://localhost:3000
+        run: |
+          npm --workspace apps/api run dev &
+          for i in {1..60}; do
+            if nc -z localhost 4000; then
+              echo "API server is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API server failed to start in time"
+          exit 1
+
       - name: Run E2E tests
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/insureconnect
@@ -100,9 +126,10 @@ jobs:
 
       - name: Upload E2E test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: e2e-results
+          if-no-files-found: ignore
           path: |
             test-results/
             playwright-report/
