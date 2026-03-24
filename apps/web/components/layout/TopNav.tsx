@@ -74,20 +74,12 @@ export default async function TopNav({
                 availableRoles={availableRoles}
               />
             ) : (
-              <>
-                <Link
-                  href="/admin/login"
-                  className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted hover:bg-gray-100 hover:text-ink sm:px-3 sm:text-sm"
-                >
-                  Admin Login
-                </Link>
-                <Link
-                  href="/login"
-                  className="rounded-lg bg-pine px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-pine-dark sm:px-4 sm:text-sm"
-                >
-                  Sign in
-                </Link>
-              </>
+              <Link
+                href="/login"
+                className="rounded-lg bg-pine px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-pine-dark sm:px-4 sm:text-sm"
+              >
+                Sign in
+              </Link>
             )}
           </div>
         </div>

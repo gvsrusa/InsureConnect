@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, NotFoundException, Param, Post } from "@nestjs/common";
 
 import { PrismaService } from "../../prisma/prisma.service";
 import { PartnersService } from "./partners.service";
@@ -145,20 +145,28 @@ export class AdminController {
       orderBy: { createdAt: "desc" }
     });
 
-    return policies.map((policy) => ({
-      id: policy.id,
-      carrierName: policy.carrierName,
-      policyNumber: policy.policyNumber,
-      status: this.toPolicyStatus(policy.status),
-      effectiveDate: policy.effectiveDate.toISOString(),
-      expirationDate: policy.expirationDate.toISOString(),
-      premium: Math.round(policy.premiumCents / 100),
-      coverageType: policy.quoteRequest.coverageType,
-      clientName:
-        policy.user?.fullName ??
-        policy.quoteRequest.requester?.fullName ??
-        policy.quoteRequest.businessName
-    }));
+    return policies.map((policy) => this.toPolicySummary(policy));
+  }
+
+  @Get("policies/:id")
+  async policy(@Param("id") id: string) {
+    const policy = await this.prisma.policy.findUnique({
+      where: { id },
+      include: {
+        quoteRequest: {
+          include: {
+            requester: true
+          }
+        },
+        user: true
+      }
+    });
+
+    if (!policy) {
+      throw new NotFoundException(`Policy ${id} not found`);
+    }
+
+    return this.toPolicySummary(policy);
   }
 
   private slugify(name: string): string {
@@ -191,6 +199,37 @@ export class AdminController {
     }
 
     return "ACTIVE";
+  }
+
+  private toPolicySummary(policy: {
+    id: string;
+    carrierName: string;
+    policyNumber: string;
+    status: string;
+    effectiveDate: Date;
+    expirationDate: Date;
+    premiumCents: number;
+    quoteRequest: {
+      coverageType: string;
+      businessName: string;
+      requester: { fullName: string | null } | null;
+    };
+    user: { fullName: string | null } | null;
+  }) {
+    return {
+      id: policy.id,
+      carrierName: policy.carrierName,
+      policyNumber: policy.policyNumber,
+      status: this.toPolicyStatus(policy.status),
+      effectiveDate: policy.effectiveDate.toISOString(),
+      expirationDate: policy.expirationDate.toISOString(),
+      premium: Math.round(policy.premiumCents / 100),
+      coverageType: policy.quoteRequest.coverageType,
+      clientName:
+        policy.user?.fullName ??
+        policy.quoteRequest.requester?.fullName ??
+        policy.quoteRequest.businessName
+    };
   }
 
   private toProductType(coverageType: string): "AUTO" | "HOME" {

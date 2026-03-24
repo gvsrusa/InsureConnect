@@ -117,6 +117,9 @@ export const agentApi = {
   policies: (token: string) =>
     apiFetch<Policy[]>("/api/v1/agent/policies", bearer(token)),
 
+  policy: (id: string, token: string) =>
+    apiFetch<Policy>(`/api/v1/agent/policies/${id}`, bearer(token)),
+
   recommend: (id: string, quoteId: string, token: string) =>
     apiFetch<{ ok: boolean }>(`/api/v1/agent/quote-requests/${id}/recommend`, {
       method: "POST",
@@ -142,5 +145,8 @@ export const partnerApi = {
     apiFetch<QuoteRequest[]>("/api/v1/admin/quote-requests", bearer(token)),
 
   policies: (token: string) =>
-    apiFetch<Policy[]>("/api/v1/admin/policies", bearer(token))
+    apiFetch<Policy[]>("/api/v1/admin/policies", bearer(token)),
+
+  policy: (id: string, token: string) =>
+    apiFetch<Policy>(`/api/v1/admin/policies/${id}`, bearer(token))
 };

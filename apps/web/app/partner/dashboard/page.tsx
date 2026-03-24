@@ -1,6 +1,7 @@
 import { requireAuth } from "@/lib/auth";
 import { partnerApi, ApiError } from "@/lib/api";
 import { MOCK_PARTNER_DASHBOARD } from "@/lib/mock-data";
+import { formatDurationFromMs } from "@/lib/format";
 import StatCard from "@/components/domain/StatCard";
 import AlertBanner from "@/components/domain/AlertBanner";
 import type { PartnerDashboardSummary } from "@/lib/types";
@@ -42,7 +43,7 @@ export default async function PartnerDashboardPage(): Promise<React.JSX.Element>
           <StatCard label="Success Rate" value={`${successPct}%`} icon="✅" trend={successPct - 95} />
           <StatCard label="Bound Policies" value={data.boundPolicies} icon="🛡" trend={8} />
           <StatCard label="API Calls Today" value={data.apiCallsToday} icon="⚡" />
-          <StatCard label="Avg Response" value={`${data.avgResponseMs}ms`} icon="⏱" />
+          <StatCard label="Avg Response" value={formatDurationFromMs(data.avgResponseMs)} icon="⏱" />
         </div>
 
         {/* API quick-reference */}

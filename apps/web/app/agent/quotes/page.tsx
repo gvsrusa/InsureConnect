@@ -7,6 +7,14 @@ import Link from "next/link";
 
 export const metadata = { title: "Quotes — Agent Console" };
 
+const FILTERS = ["ALL", "PENDING", "COMPLETED", "EXPIRED", "FAILED"] as const;
+
+type QuoteFilter = (typeof FILTERS)[number];
+
+interface Props {
+  searchParams: Promise<{ status?: string }>;
+}
+
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const hrs = Math.floor(diff / 3_600_000);
@@ -15,8 +23,9 @@ function timeAgo(iso: string): string {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-export default async function AgentQuotesPage(): Promise<React.JSX.Element> {
+export default async function AgentQuotesPage({ searchParams }: Props): Promise<React.JSX.Element> {
   const token = await requireAuth("/login");
+  const { status } = await searchParams;
 
   // TODO: GET /api/v1/agent/quote-requests — returns paginated list; add filter/sort params
   let quoteRequests: QuoteRequest[] = MOCK_AGENT_DASHBOARD.recentQuoteRequests;
@@ -35,25 +44,46 @@ export default async function AgentQuotesPage(): Promise<React.JSX.Element> {
     FAILED: quoteRequests.filter((q) => q.status === "FAILED")
   };
 
+  const activeFilter: QuoteFilter = FILTERS.includes((status ?? "").toUpperCase() as QuoteFilter)
+    ? ((status ?? "").toUpperCase() as QuoteFilter)
+    : "ALL";
+
+  const filteredQuoteRequests =
+    activeFilter === "ALL"
+      ? quoteRequests
+      : quoteRequests.filter((quoteRequest) => quoteRequest.status === activeFilter);
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-ink">Quote Requests</h1>
         <p className="mt-1 text-sm text-muted">
-          {quoteRequests.length} total · {byStatus.PENDING.length} pending
+          {filteredQuoteRequests.length} shown · {quoteRequests.length} total · {byStatus.PENDING.length} pending
         </p>
       </div>
 
-      {/* Filter chips (display only – TODO: wire to URL params for server-side filtering) */}
       <div className="flex flex-wrap gap-2">
-        {(["ALL", "PENDING", "COMPLETED", "EXPIRED"] as const).map((s) => (
-          <span
-            key={s}
-            className="cursor-pointer rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-muted hover:border-pine hover:text-pine transition-colors"
-          >
-            {s === "ALL" ? `All (${quoteRequests.length})` : `${s} (${byStatus[s]?.length ?? 0})`}
-          </span>
-        ))}
+        {FILTERS.map((filter) => {
+          const isActive = filter === activeFilter;
+
+          return (
+            <Link
+              key={filter}
+              href={filter === "ALL" ? "/agent/quotes" : `/agent/quotes?status=${filter}`}
+              aria-current={isActive ? "page" : undefined}
+              className={[
+                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                isActive
+                  ? "border-pine bg-pine text-white"
+                  : "border-gray-200 bg-white text-muted hover:border-pine hover:text-pine"
+              ].join(" ")}
+            >
+              {filter === "ALL"
+                ? `All (${quoteRequests.length})`
+                : `${filter} (${byStatus[filter]?.length ?? 0})`}
+            </Link>
+          );
+        })}
       </div>
 
       <div className="rounded-2xl border border-[var(--color-border)] bg-white shadow-card overflow-hidden">
@@ -72,7 +102,7 @@ export default async function AgentQuotesPage(): Promise<React.JSX.Element> {
             </tr>
           </thead>
             <tbody className="divide-y divide-gray-50">
-              {quoteRequests.map((qr) => (
+              {filteredQuoteRequests.map((qr) => (
                 <tr key={qr.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 font-mono text-xs text-muted">{qr.id.slice(0, 8)}</td>
                   <td className="px-4 py-3 text-ink">{qr.clientEmail ?? "—"}</td>
@@ -96,8 +126,10 @@ export default async function AgentQuotesPage(): Promise<React.JSX.Element> {
           </table>
         </div>
 
-        {quoteRequests.length === 0 && (
-          <div className="py-14 text-center text-sm text-muted">No quote requests yet.</div>
+        {filteredQuoteRequests.length === 0 && (
+          <div className="py-14 text-center text-sm text-muted">
+            {activeFilter === "ALL" ? "No quote requests yet." : `No ${activeFilter.toLowerCase()} quote requests.`}
+          </div>
         )}
       </div>
     </div>

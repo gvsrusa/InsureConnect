@@ -1,5 +1,5 @@
 import { requireAuth } from "@/lib/auth";
-import { portalApi, ApiError } from "@/lib/api";
+import { partnerApi, ApiError } from "@/lib/api";
 import { MOCK_POLICIES } from "@/lib/mock-data";
 import StatusBadge from "@/components/domain/StatusBadge";
 import DigitalInsuranceCard from "@/components/domain/DigitalInsuranceCard";
@@ -30,10 +30,10 @@ export default async function PartnerPolicyDetailPage({ params }: Props): Promis
   const { id } = await params;
   const token = await requireAuth("/login?portal=partner");
 
-  // TODO: Remove fallback once GET /api/v1/partner/policies/:id is confirmed working
+  // TODO: Remove fallback once GET /api/v1/admin/policies/:id is confirmed working
   let policy: Policy | undefined = MOCK_POLICIES.find((p) => p.id === id);
   try {
-    policy = await portalApi.policy(id, token);
+    policy = await partnerApi.policy(id, token);
   } catch (err) {
     if (err instanceof ApiError && err.statusCode !== 404) {
       console.warn("Policy API unavailable, using mock data:", (err as Error).message);

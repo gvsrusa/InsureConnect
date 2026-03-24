@@ -124,8 +124,18 @@ export class AgentController {
   }
 
   @Get("policies")
-  async policies() {
+  async policies(@CurrentUser() user: JwtUser) {
     const policies = await this.prisma.policy.findMany({
+      where:
+        user.role === UserRole.AGENT
+          ? {
+              quoteRequest: {
+                agentAssignments: {
+                  some: { agentId: user.userId }
+                }
+              }
+            }
+          : undefined,
       include: {
         quoteRequest: {
           include: {
@@ -137,20 +147,39 @@ export class AgentController {
       orderBy: { createdAt: "desc" }
     });
 
-    return policies.map((policy) => ({
-      id: policy.id,
-      carrierName: policy.carrierName,
-      policyNumber: policy.policyNumber,
-      status: this.toPolicyStatus(policy.status),
-      effectiveDate: policy.effectiveDate.toISOString(),
-      expirationDate: policy.expirationDate.toISOString(),
-      premium: Math.round(policy.premiumCents / 100),
-      coverageType: policy.quoteRequest.coverageType,
-      clientName:
-        policy.user?.fullName ??
-        policy.quoteRequest.requester?.fullName ??
-        policy.quoteRequest.businessName
-    }));
+    return policies.map((policy) => this.toPolicySummary(policy));
+  }
+
+  @Get("policies/:id")
+  async policy(@Param("id") id: string, @CurrentUser() user: JwtUser) {
+    const policy = await this.prisma.policy.findFirst({
+      where: {
+        id,
+        ...(user.role === UserRole.AGENT
+          ? {
+              quoteRequest: {
+                agentAssignments: {
+                  some: { agentId: user.userId }
+                }
+              }
+            }
+          : {})
+      },
+      include: {
+        quoteRequest: {
+          include: {
+            requester: true
+          }
+        },
+        user: true
+      }
+    });
+
+    if (!policy) {
+      throw new NotFoundException(`Policy ${id} not found`);
+    }
+
+    return this.toPolicySummary(policy);
   }
 
   @Post("quote-requests/:id/recommend")
@@ -234,6 +263,37 @@ export class AgentController {
     }
 
     return "PENDING";
+  }
+
+  private toPolicySummary(policy: {
+    id: string;
+    carrierName: string;
+    policyNumber: string;
+    status: string;
+    effectiveDate: Date;
+    expirationDate: Date;
+    premiumCents: number;
+    quoteRequest: {
+      coverageType: string;
+      businessName: string;
+      requester: { fullName: string | null } | null;
+    };
+    user: { fullName: string | null } | null;
+  }) {
+    return {
+      id: policy.id,
+      carrierName: policy.carrierName,
+      policyNumber: policy.policyNumber,
+      status: this.toPolicyStatus(policy.status),
+      effectiveDate: policy.effectiveDate.toISOString(),
+      expirationDate: policy.expirationDate.toISOString(),
+      premium: Math.round(policy.premiumCents / 100),
+      coverageType: policy.quoteRequest.coverageType,
+      clientName:
+        policy.user?.fullName ??
+        policy.quoteRequest.requester?.fullName ??
+        policy.quoteRequest.businessName
+    };
   }
 
   private toPolicyStatus(status: string): "ACTIVE" | "CANCELLED" | "EXPIRED" {
