@@ -49,26 +49,22 @@ function AdminLoginForm(): React.JSX.Element {
   }
 
   return (
-    <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-slate-950 px-4 py-16 sm:px-6">
-      <div className="pointer-events-none absolute -top-40 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-cyan-500/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-48 right-10 h-96 w-96 rounded-full bg-emerald-400/20 blur-3xl" />
-
-      <div className="relative mx-auto w-full max-w-md rounded-3xl border border-slate-700/70 bg-slate-900/90 p-8 shadow-2xl backdrop-blur">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Admin Portal</p>
-        <h1 className="mt-2 text-3xl font-bold text-white">Secure Access</h1>
-        <p className="mt-2 text-sm text-slate-300">
-          Sign in with an admin account to manage roles and audit logs.
+    <div className="w-full max-w-sm">
+      <div className="rounded-2xl border border-[var(--color-border)] bg-white p-8 shadow-card">
+        <h1 className="text-xl font-bold text-ink">Admin sign in</h1>
+        <p className="mt-1 text-sm text-muted">
+          Use your admin account to manage users, roles, and audit history.
         </p>
 
         {error && (
-          <div role="alert" className="mt-4 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+          <div role="alert" className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <div>
-            <label htmlFor="admin-email" className="block text-sm font-medium text-slate-200">
+            <label htmlFor="admin-email" className="block text-sm font-medium text-ink">
               Admin email
             </label>
             <input
@@ -79,12 +75,12 @@ function AdminLoginForm(): React.JSX.Element {
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
               placeholder="admin@example.com"
-              className="mt-1 block w-full rounded-xl border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition-colors placeholder:text-slate-500 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
+              className="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition-colors focus:border-pine focus:ring-1 focus:ring-pine"
             />
           </div>
 
           <div>
-            <label htmlFor="admin-password" className="block text-sm font-medium text-slate-200">
+            <label htmlFor="admin-password" className="block text-sm font-medium text-ink">
               Password
             </label>
             <input
@@ -95,22 +91,22 @@ function AdminLoginForm(): React.JSX.Element {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               placeholder="••••••••"
-              className="mt-1 block w-full rounded-xl border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition-colors placeholder:text-slate-500 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
+              className="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition-colors focus:border-pine focus:ring-1 focus:ring-pine"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 py-2.5 text-sm font-semibold text-slate-950 transition-opacity hover:opacity-90 disabled:opacity-60"
+            className="w-full rounded-xl bg-pine py-2.5 text-sm font-semibold text-white transition-colors hover:bg-pine-dark disabled:opacity-60"
           >
             {loading ? "Signing in..." : "Sign in as admin"}
           </button>
         </form>
 
-        <p className="mt-5 text-center text-sm text-slate-300">
-          Not an admin?{" "}
-          <Link href="/login" className="font-semibold text-cyan-300 hover:text-cyan-200">
+        <p className="mt-5 text-center text-sm text-muted">
+          Need regular access?{" "}
+          <Link href="/login" className="font-semibold text-pine hover:underline">
             Go to standard login
           </Link>
         </p>
@@ -121,7 +117,7 @@ function AdminLoginForm(): React.JSX.Element {
 
 export default function AdminLoginPage(): React.JSX.Element {
   return (
-    <Suspense fallback={<div className="min-h-[calc(100vh-4rem)] bg-slate-950" />}>
+    <Suspense fallback={<div className="w-full max-w-sm" />}>
       <AdminLoginForm />
     </Suspense>
   );
