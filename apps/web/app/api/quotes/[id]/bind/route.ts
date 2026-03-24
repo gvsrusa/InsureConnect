@@ -19,6 +19,14 @@ export async function POST(req: NextRequest, { params }: RouteProps): Promise<Ne
     return NextResponse.redirect(new URL("/login", APP_URL));
   }
 
+  // Determine portal path based on which access token is present
+  let portalPath = "";
+  if (cookieStore.get("access_token_agent")) {
+    portalPath = "/agent";
+  } else if (cookieStore.get("access_token_partner")) {
+    portalPath = "/partner";
+  }
+  // default to customer portal (empty string) if neither agent nor partner
   const formData = await req.formData();
   const quoteId = String(formData.get("quoteId") ?? "").trim();
 
@@ -34,9 +42,9 @@ export async function POST(req: NextRequest, { params }: RouteProps): Promise<Ne
   if (!upstream.ok) {
     const err = await upstream.json().catch(() => ({ message: "Unable to bind policy" })) as { message?: string };
     return NextResponse.redirect(
-      new URL(`/quotes?quoteRequestId=${id}&error=${encodeURIComponent(err.message ?? "Unable to bind policy")}`, APP_URL)
+      new URL(`${portalPath}/quotes?quoteRequestId=${id}&error=${encodeURIComponent(err.message ?? "Unable to bind policy")}`, APP_URL)
     );
   }
 
-  return NextResponse.redirect(new URL("/policies", APP_URL));
+  return NextResponse.redirect(new URL(`${portalPath}/policies`, APP_URL));
 }

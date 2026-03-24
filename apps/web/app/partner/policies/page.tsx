@@ -35,8 +35,8 @@ export default async function PartnerPoliciesPage(): Promise<React.JSX.Element> 
           Active ({activePolicies.length})
         </h2>
         <div className="space-y-3">
-          {activePolicies.map((policy) => (
-            <PolicyCard key={policy.id} policy={policy} showClientName />
+          {activePolicies.map((p) => (
+            <PolicyCard key={p.id} policy={p} showClientName portalPrefix="/partner" />
           ))}
         </div>
       </section>
@@ -48,7 +48,7 @@ export default async function PartnerPoliciesPage(): Promise<React.JSX.Element> 
           </h2>
           <div className="space-y-3">
             {inactivePolicies.map((policy) => (
-              <PolicyCard key={policy.id} policy={policy} showClientName />
+              <PolicyCard key={policy.id} policy={policy} showClientName portalPrefix="/partner" />
             ))}
           </div>
         </section>

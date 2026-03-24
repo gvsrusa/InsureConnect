@@ -5,8 +5,9 @@ import type { Policy } from "@/lib/types";
 interface PolicyCardProps {
   policy: Policy;
   showClientName?: boolean;
-}
+  portalPrefix?: string;
 
+}
 const CARRIER_COLORS: Record<string, string> = {
   "State Farm": "bg-red-50 text-red-700",
   Progressive: "bg-blue-50 text-blue-700",
@@ -32,14 +33,15 @@ function formatCurrency(cents: number): string {
 
 export default function PolicyCard({
   policy,
-  showClientName = false
+  showClientName = false,
+  portalPrefix = ""
 }: PolicyCardProps): React.JSX.Element {
   const carrierStyle =
     CARRIER_COLORS[policy.carrierName] ?? "bg-gray-100 text-gray-600";
 
   return (
     <Link
-      href={`/policies/${policy.id}`}
+      href={`${portalPrefix}/policies/${policy.id}`}
       className="group flex flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-white p-5 shadow-card transition-shadow hover:shadow-card-hover"
     >
       {/* Header row */}

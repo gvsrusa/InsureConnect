@@ -41,7 +41,7 @@ export default async function AgentPoliciesPage(): Promise<React.JSX.Element> {
           </h2>
           <div className="space-y-3">
             {active.map((p) => (
-              <PolicyCard key={p.id} policy={p} showClientName />
+              <PolicyCard key={p.id} policy={p} showClientName portalPrefix="/agent" />
             ))}
           </div>
         </section>
@@ -57,7 +57,7 @@ export default async function AgentPoliciesPage(): Promise<React.JSX.Element> {
           </h2>
           <div className="space-y-3">
             {cancelled.map((p) => (
-              <PolicyCard key={p.id} policy={p} showClientName />
+              <PolicyCard key={p.id} policy={p} showClientName portalPrefix="/agent" />
             ))}
           </div>
         </section>
