@@ -2,6 +2,26 @@
 
 InsureConnect is a Turbo monorepo with a NestJS API, a Next.js web app, shared TypeScript packages, and Prisma for the PostgreSQL data model.
 
+## Product Showcase
+
+If you are evaluating this repository as a product and engineering portfolio, start here:
+
+1. [Product Showcase Hub](docs/showcase/README.md)
+2. [Screenshot Catalog](docs/showcase/screenshot-catalog.md)
+3. [Testing Evidence Report](docs/showcase/testing-report.md)
+4. [Recruiter One Pager](docs/showcase/recruiter-one-pager.md)
+
+### Application Summary
+
+InsureConnect provides role-based insurance workflows for:
+
+- Customers: dashboard and policy visibility.
+- Agents: quote management, filtering, and policy servicing.
+- Partner users: integration analytics, quote traffic, and policies.
+- Admins: role management and audit tracking.
+
+This project demonstrates full-stack delivery across frontend UX, backend APIs, authentication, authorization, and regression testing.
+
 ## Architecture Overview
 
 - `apps/api`: NestJS backend, listening on port `4000` inside the stack.
